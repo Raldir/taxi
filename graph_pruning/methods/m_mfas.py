@@ -10,7 +10,7 @@ def prepare(line):
     g.add_edge(line[1], line[2])
 
 
-def do(filename_out, delimiter, mode, gephi_out):
+def do(filename_out, delimiter, mode, gephi_out, filename_in=None):
     edges_to_be_removed = remove_cycle_edges_by_mfas()
 
     cycles_removed = util.remove_edges_from_network_graph(g, edges_to_be_removed)
