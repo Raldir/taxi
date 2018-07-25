@@ -8,6 +8,12 @@ import gzip
 import os
 import argparse
 import logging
+from sklearn.manifold import TSNE
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from gensim.models.poincare import PoincareModel, PoincareRelations
+from gensim.test.utils import datapath
 # from spacy.en import English
 # parser = spacy.load('en_core_web_md')
 import pandas
@@ -113,10 +119,8 @@ def read_trial_data():
 
 def read_all_data():
     global compound_operator
-    # Load Google's pre-trained Word2Vec model.
     filename_in = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../out/science_en.csv-relations.csv-taxo-knn1.csv-pruned.csv-cleaned.csv")
     filename_gold = "gold.taxo"
-    # Load Google's pre-trained Word2Vec model.
     relations = []
     with open(filename_in, 'r') as f:
         reader = csv.reader(f, delimiter = '\t')
@@ -144,10 +148,6 @@ def get_rank(entity1, entity2, model, threshhold):
         temp_rev = similarities_rev[j]
         if entity2 == temp_rev:
             rank_inv = j
-        # selectors  = ["computer science", "computer-science", "computer_science"]
-        # for selector in selectors:
-        #     if entity2 == selector:
-        #         print(selector)
     return rank_inv
 
 def connect_to_taxonomy(relations_o, current_word, model):
@@ -197,7 +197,6 @@ def remove_title(text):
 
 def read_input(input_file, vocabulary):
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    """This method reads the input file which is in gzip format"""
 
     logging.info("reading file {0}...this may take a while".format(input_file))
     colnames = ["id,", "text"]
@@ -221,10 +220,6 @@ def read_input(input_file, vocabulary):
             if word_voc.replace(' ', "-") in line:
                 line = line.replace(word_voc.replace(' ', '-'), word_voc.replace(' ', compound_operator))
         cleared_line = gensim.utils.simple_preprocess (line, max_len = 30)
-        # if not isa:
-        #     for entry in cleared_line:
-        #         if entry in [word_voc.replace(' ', compound_operator) for word_voc in vocabulary]:
-        #             print(entry)
         yield cleared_line
     print(freq)
 
@@ -233,11 +228,12 @@ def visualize_taxonomy(taxonomy_vectors, taxonomy_names):
     tsne = TSNE(n_components=2, random_state=0)
     np.set_printoptions(suppress=True)
     Y = tsne.fit_transform(taxonomy_vectors)
-
+    #plt.figure(figsize=(7,7))
     plt.scatter(Y[:, 0], Y[:, 1])
     for label, x, y in zip(taxonomy_names, Y[:, 0], Y[:, 1]):
-        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords='offset points')
+        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords='offset points', fontsize = 1)
     plt.show()
+    plt.savefig('taxonomy.png', dpi = 2000)
 
 
 
@@ -300,23 +296,14 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshho
     print(outliers)
     return outliers
 
-embedding = None
-
-
-if len(sys.argv) >= 2:
-    mode = sys.argv[1]
-
-if len(sys.argv) >= 3:
-    embedding = sys.argv[2]
-
 
 
 
 def main():
     parser = argparse.ArgumentParser(description="Embeddings for Taxonomy")
-    parser.add_argument('mode', type=str, default='preload', choices=["analysis", "normal", "train_embeddings", "gridsearch_removal", "gridsearch_removal_add", "gridsearch_removal_add_iterative"], help="Mode of the system.")
-    parser.add_argument('embedding', type=str, default='quick', choices=["fasttext_ref", "wiki2M", "wiki1M_subword", "own_fasttext","own_w2v", "quick"], help="Classifier architecture of the system.")
-    parser.add_argument('experiment_name', type=str, default=None, help="Name of the Experiment")
+    parser.add_argument('mode', type=str, default='preload', choices=["train_poincare", "analysis", "visualize_embedding", "visualize_embedding_poincare", "normal", "train_word2vec", "gridsearch_removal", "gridsearch_removal_add", "gridsearch_removal_add_iterative"], help="Mode of the system.")
+    parser.add_argument('embedding', type=str, nargs='?', default=None, choices=["poincare", "fasttext", "wiki2M", "wiki1M_subword", "own_w2v", "quick", "none"], help="Classifier architecture of the system.")
+    parser.add_argument('experiment_name', nargs='?', type=str, default=None, help="Name of the Experiment")
     parser.add_argument('--log', action='store_true', help="Logs taxonomy and results")
     parser.add_argument('--trial', action='store_true', help="Uses trial dataset")
     args = parser.parse_args()
@@ -324,8 +311,8 @@ def main():
     run(args.mode, args.embedding, args.experiment_name, args.log, args.trial)
 
 
-def run(mode, embedding, experiment_name, log = False, trial = False):
-    if embedding == "fasttext_ref":
+def run(mode, embedding, experiment_name = None, log = False, trial = False):
+    if embedding == "fasttext":
         #model = gensim.models.KeyedVectors.load_word2vec_format('wiki-news-300d-1M-subword.vec', binary=False)
         model = gensim.models.FastText.load_fasttext_format('wiki.en.bin')
         #model = gensim.models.FastText.load_fasttext_format('crawl-300d-2M.vec')
@@ -336,33 +323,67 @@ def run(mode, embedding, experiment_name, log = False, trial = False):
     elif embedding == "wiki1M_subword":
         model = gensim.models.KeyedVectors.load_word2vec_format('wiki-news-300d-1M-subword.vec', binary=False)
 
-    elif embedding == "own_fasttext":
-        model = gensim.models.FastText.load("own_embeddings")
-        print(model.wv.similarity("dog", "cat"))
-        print(model.wv.similarity("clean", "dirty"))
-        print(model.wv.similarity("computer-science", "science"))
-        print(model.wv.similarity("signal-processing", "electrical-engineering"))
-        print(model.wv.similarity("plant-breeding", "plant-science"))
-        print(model.wv.similarity('digital-circuits', 'electrical-engineering'))
-        print(len(model.wv.vocab))
     elif embedding == "own_w2v":
         model = gensim.models.KeyedVectors.load('own_embeddings_w2v')
-        print(model.wv.similarity("dog", "cat"))
-        print(model.wv.similarity("clean", "dirty"))
-        print(model.wv.similarity("signal_processing", "dog"))
-        print(model.wv.similarity("computer_science", "science"))
-        print(model.wv.similarity("signal_processing", "electrical_engineering"))
-        print(model.wv.similarity("plant_breeding", "plant_science"))
-        print(model.wv.similarity('digital_circuits', 'electrical_engineering'))
-        print(len(model.wv.vocab))
+
     elif embedding == "quick":
         model = gensim.models.KeyedVectors.load_word2vec_format('crawl-300d-2M.vec', binary=False, limit = 50000)
+
+    elif embedding == "poincare":
+        model = PoincareModel.load('embeddings_poincare')
+        #print([word for word in model.kv.vocab.items()][:1])
+        word = "communication.n.02"
+        #KeyedVectors = model.kv
+        #print(model.kv.get_vector("science.n.01"))
+
 
     gold = []
     relations = []
     taxonomy = []
     outliers = []
-    if mode =="train_embeddings":
+
+    if mode == "visualize_embedding_poincare":
+        gold, relations = read_all_data()
+        input_words = [relation1[1].replace(" ", "_") for relation1 in relations] + [relation2[2].replace(" ", "_") for relation2 in relations]
+        vectors = []
+        names = []
+        for word in model.kv.vocab.items():
+            word = word[0]
+            word_only = word.split('.')[0]
+            if word_only in input_words:
+                if word not in names:
+                    names.append(word)
+                    vectors.append(model.kv.get_vector(word))
+                    continue
+        print("Starting visualization")
+
+
+        visualize_taxonomy(vectors, names)
+
+    if mode == "visualize_embedding":
+        gold, relations = read_all_data()
+        vectors = []
+        names = []
+        for relation in ([relation1[1].replace(" ", "_") for relation1 in relations] + [relation2[2].replace(" ", "_") for relation2 in relations]):
+            if relation not in names:
+                if relation not in model.wv:
+                    print(relation)
+                    continue
+                vectors.append(model.wv[relation])
+                names.append(relation)
+        visualize_taxonomy(vectors, names)
+
+    if mode == 'train_poincare':
+        gold,relations = read_all_data()
+
+        relations = './noun_closure.tsv'
+        poincare_rel = PoincareRelations(relations)
+        model = PoincareModel(poincare_rel)
+        print("Starting Training...")
+        model.train(epochs=400)
+        model.save("embeddings_poincare")
+
+    if mode == "train_word2vec":
         gold,relations = read_all_data()
         vocabulary = set([relation[2] for relation in relations] + [relation[1] for relation in relations])
         documents = list(read_input(os.path.join(os.path.dirname(os.path.abspath(__file__)), "wikipedia_utf8_filtered_20pageviews.csv" ),vocabulary))
@@ -374,7 +395,6 @@ def run(mode, embedding, experiment_name, log = False, trial = False):
         model.save("own_embeddings_w2v")
 
     elif mode == "analysis":
-        print("hello")
         gold, relations = read_all_data()
         voc_rel = set([relation[1] for relation in relations] + [relation[2] for relation in relations])
         voc_gold = set([relation[1] for relation in gold] + [relation[2] for relation in gold])
