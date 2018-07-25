@@ -20,7 +20,7 @@ def prepare(node):
         print("Keep hypernym '%s' of hyponym '%s'." % (hypo_to_hyper[hypo], hypo))
 
 
-def do(filename_out, delimiter, mode):
+def do(filename_out, delimiter, mode, filename_in=None):
     print("Relations created (hypo_to_hyper):")
     print(hypo_to_hyper)
 
