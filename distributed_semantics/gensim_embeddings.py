@@ -14,21 +14,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from gensim.models.poincare import PoincareModel, PoincareRelations
 from gensim.test.utils import datapath
+from data_loader import read_all_data, read_trial_data, read_input, compound_operator
 # from spacy.en import English
 # parser = spacy.load('en_core_web_md')
 import pandas
-
-compound_operator = "_"
-
-def create_compound_word(compound, model):
-    global compound_operator
-    word_parts = compound.split(compound_operator)
-    compound_word = np.copy(model.wv[word_parts[0]])
-    for i in range(1, len(word_parts)):
-        part = word_parts[i]
-        compound_word += model.wv[part]
-    compound_word /= (len(word_parts))
-    return compound_word
 
 
 def compare_to_gold(gold, taxonomy_o, outliers, model, mode = "removal", log = False, write_file = None):
@@ -90,50 +79,6 @@ def compare_to_gold(gold, taxonomy_o, outliers, model, mode = "removal", log = F
     return removed_outliers
 
 
-
-
-def read_trial_data():
-    all_info = []
-    trial_dataset_fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),"relations.csv")
-    with open(trial_dataset_fpath, 'r') as f:
-        reader = csv.reader(f, delimiter = '\t')
-        for i, line in enumerate(reader):
-            #id, hyponym, hypernym, correct, source
-            all_info.append((line[0], line[1], line[2], line[3], line[4]))
-    correct_relations = []
-    wrong_relations = []
-    all_relations = []
-    taxonomy = []
-    for entry in all_info:
-        if entry[4] in ["WN_plants.taxo", "WN_vehicles.taxo", "ontolearn_AI.taxo"]: #alternatively add negative co-hypo
-            if entry[3] == "1":
-                correct_relations.append((entry[0], entry[1], entry[2]))
-                all_relations.append((entry[0], entry[1], entry[2]))
-            else:
-                wrong_relations.append((entry[0], entry[1], entry[2]))
-                all_relations.append((entry[0], entry[1], entry[2]))
-
-    for i in range(len(all_relations)):
-        all_relations[i] = (all_relations[i][0], all_relations[i][1].replace(" ", compound_operator), all_relations[i][2].replace(" ", compound_operator))
-    return [correct_relations, all_relations, taxonomy]
-
-def read_all_data():
-    global compound_operator
-    filename_in = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../out/science_en.csv-relations.csv-taxo-knn1.csv-pruned.csv-cleaned.csv")
-    filename_gold = "gold.taxo"
-    relations = []
-    with open(filename_in, 'r') as f:
-        reader = csv.reader(f, delimiter = '\t')
-        for i, line in enumerate(reader):
-            relations.append((line[0], line[1], line[2]))
-
-    gold= []
-    with open(filename_gold, 'r') as f:
-        reader = csv.reader(f, delimiter = '\t')
-        for i, line in enumerate(reader):
-            gold.append((line[0], line[1], line[2]))
-    return [gold, relations]
-
 def get_parent(relations,child):
     for relation in relations:
         if child == relation[1]:
@@ -182,49 +127,9 @@ def connect_to_taxonomy(relations_o, current_word, model):
     return [best_word, parent, rank, rank_inv, rank_root]
 
 
-#since titles are just mashed into string consider in the future to find a way to detect the title
-def remove_title(text):
-    curr_title = ""
-    seperated_text = text.split(" ")
-    for i in range(len(seperated_text)):
-        word = seperated_text[i]
-        if word == curr_title.split(" ")[0]:
-            break
-        else:
-            curr_title = curr_title + word[i]
-    return text.remove(curr_title)
 
 
-def read_input(input_file, vocabulary):
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-
-    logging.info("reading file {0}...this may take a while".format(input_file))
-    colnames = ["id,", "text"]
-    data = pandas.read_csv(input_file, names= colnames)
-    text = data.text.tolist()
-    freq = {}
-    print("Number of Reviews: " + str(len(text)))
-    for i in range(len(text)):
-        line = text[i]
-        if (i%10000==0):
-            logging.info ("read {0} reviews".format (i))
-            print(line)
-
-        line = line.lower()
-        for word_voc in vocabulary:
-            if word_voc in line and word_voc != word_voc.replace(' ', compound_operator):
-                print(word_voc + " " + str(i))
-                line = line.replace(word_voc, word_voc.replace(' ', compound_operator))
-                # print(freq)
-                #print(line)
-            if word_voc.replace(' ', "-") in line:
-                line = line.replace(word_voc.replace(' ', '-'), word_voc.replace(' ', compound_operator))
-        cleared_line = gensim.utils.simple_preprocess (line, max_len = 30)
-        yield cleared_line
-    print(freq)
-
-
-def visualize_taxonomy(taxonomy_vectors, taxonomy_names):
+def visualize_taxonomy(taxonomy_vectors, taxonomy_names, name):
     tsne = TSNE(n_components=2, random_state=0)
     np.set_printoptions(suppress=True)
     Y = tsne.fit_transform(taxonomy_vectors)
@@ -233,7 +138,7 @@ def visualize_taxonomy(taxonomy_vectors, taxonomy_names):
     for label, x, y in zip(taxonomy_names, Y[:, 0], Y[:, 1]):
         plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords='offset points', fontsize = 1)
     plt.show()
-    plt.savefig('taxonomy.png', dpi = 2000)
+    plt.savefig(os.path.join("vis", name), dpi = 2000)
 
 
 
@@ -318,21 +223,24 @@ def run(mode, embedding, experiment_name = None, log = False, trial = False):
         #model = gensim.models.FastText.load_fasttext_format('crawl-300d-2M.vec')
     elif embedding == "wiki2M":
         #model = gensim.models.FastText.load_fasttext_format('crawl-300d-2M.vec','vec')
-        model = gensim.models.KeyedVectors.load_word2vec_format('crawl-300d-2M.vec', binary=False)
+        model = gensim.models.KeyedVectors.load_word2vec_format('embeddings/crawl-300d-2M.vec', binary=False)
         #model.save("crawl-300d-2M.bin")
     elif embedding == "wiki1M_subword":
-        model = gensim.models.KeyedVectors.load_word2vec_format('wiki-news-300d-1M-subword.vec', binary=False)
+        model = gensim.models.KeyedVectors.load_word2vec_format('embeddings/wiki-news-300d-1M-subword.vec', binary=False)
 
     elif embedding == "own_w2v":
-        model = gensim.models.KeyedVectors.load('own_embeddings_w2v')
+        model = gensim.models.KeyedVectors.load('embeddings/own_embeddings_w2v')
 
     elif embedding == "quick":
-        model = gensim.models.KeyedVectors.load_word2vec_format('crawl-300d-2M.vec', binary=False, limit = 50000)
+        model = gensim.models.KeyedVectors.load_word2vec_format('embeddings/crawl-300d-2M.vec', binary=False, limit = 50000)
 
     elif embedding == "poincare":
-        model = PoincareModel.load('embeddings_poincare')
+        model = PoincareModel.load('embeddings/embeddings_poincare_wordnet')
         #print([word for word in model.kv.vocab.items()][:1])
-        word = "communication.n.02"
+        word = "immunology.n.01"
+        print(model.kv.closest_parent(word))
+        print(model.kv.closest_child(word))
+        print(model.kv.descendants(word))
         #KeyedVectors = model.kv
         #print(model.kv.get_vector("science.n.01"))
 
@@ -371,12 +279,12 @@ def run(mode, embedding, experiment_name = None, log = False, trial = False):
                     continue
                 vectors.append(model.wv[relation])
                 names.append(relation)
-        visualize_taxonomy(vectors, names)
+        visualize_taxonomy(vectors, names, experiment_name)
 
     if mode == 'train_poincare':
         gold,relations = read_all_data()
 
-        relations = './noun_closure.tsv'
+        relations = './data/noun_closure.tsv'
         poincare_rel = PoincareRelations(relations)
         model = PoincareModel(poincare_rel)
         print("Starting Training...")
@@ -386,8 +294,7 @@ def run(mode, embedding, experiment_name = None, log = False, trial = False):
     if mode == "train_word2vec":
         gold,relations = read_all_data()
         vocabulary = set([relation[2] for relation in relations] + [relation[1] for relation in relations])
-        documents = list(read_input(os.path.join(os.path.dirname(os.path.abspath(__file__)), "wikipedia_utf8_filtered_20pageviews.csv" ),vocabulary))
-        #documents = list(read_input(train_data_raw,vocabulary))
+        documents = list(read_input(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data","wikipedia_utf8_filtered_20pageviews.csv" ),vocabulary))
         model = gensim.models.Word2Vec(size= 300, window = 5, min_count = 5, workers = 30)
         model.build_vocab(documents)
         #model.train(documents, total_examples = len(documents), epochs=10)
@@ -479,3 +386,13 @@ if __name__ == '__main__':
 #             model.syn0[relation[2]] = compound_word
 #
 #     return valid_words, compound_words
+
+# def create_compound_word(compound, model):
+#     global compound_operator
+#     word_parts = compound.split(compound_operator)
+#     compound_word = np.copy(model.wv[word_parts[0]])
+#     for i in range(1, len(word_parts)):
+#         part = word_parts[i]
+#         compound_word += model.wv[part]
+#     compound_word /= (len(word_parts))
+#     return compound_word

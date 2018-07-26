@@ -124,3 +124,5 @@ distributed_semantics/own_embeddings_w2v
 distributed_semantics/own_embeddings_w2v.trainables.syn1neg.npy
 distributed_semantics/own_embeddings_w2v.wv.vectors.npy
 poincare-embeddings/
+distributed_semantics/data/
+distributed_semantics/embeddings/
