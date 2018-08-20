@@ -1,7 +1,6 @@
 # Custom Files
 resources/
 resources.tgz
-networkx_visualizations/*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -88,7 +87,6 @@ taxi_output/simple_test/output.txt
 
 
 distributed_semantics/GoogleNews-vectors-negative300.bin
-<<<<<<< HEAD
 distributed_semantics/reddit_vectors-1.1.0/
 distributed_semantics/wiki-news-300d-1M-subword.vec
 
@@ -114,8 +112,7 @@ other
 .idea/
 Model/
 TExEval_trialdata_1.2
-property_analysis/
-
+property_analysis/isas-commoncrawl.csv 
 distributed_semantics/own_embeddings
 distributed_semantics/own_embeddings.trainables.syn1neg.npy
 distributed_semantics/own_embeddings.trainables.vectors_ngrams_lockf.npy
@@ -126,5 +123,6 @@ distributed_semantics/own_embeddings.wv.vectors_vocab.npy
 distributed_semantics/own_embeddings_w2v
 distributed_semantics/own_embeddings_w2v.trainables.syn1neg.npy
 distributed_semantics/own_embeddings_w2v.wv.vectors.npy
-
-
+poincare-embeddings/
+distributed_semantics/data/
+distributed_semantics/embeddings/
