@@ -1,3 +1,13 @@
+How to run:
+
+	1. Download embeddings
+		http://nlp.stanford.edu/data/glove.6B.zip
+
+	2. Download corpus
+		http://panchenko.me/data/joint/corpora/wikipedia2018-noxml.txt.gz
+
+
+
 python train_integrated.py ../corpus/corpus/wiki ../dataset/datasets/dataset_rnd/ ../model/ ../embedding/glove.6B.50d.txt 0.001 0.5
 
 
