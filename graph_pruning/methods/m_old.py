@@ -3,6 +3,7 @@ import random
 import csv
 
 hypo_to_hyper = {}
+pruned = 0
 
 def prepare(node):
     id = node[0]
@@ -15,6 +16,7 @@ def prepare(node):
         hypo_to_hyper[hypo] = hyper
     elif random.randint(0, 1) == 0:
         print("Replace hypernym of hyponym '%s' with: %s" % (hypo, hyper))
+        pruned += 1
         hypo_to_hyper[hypo] = hyper
     else:
         print("Keep hypernym '%s' of hyponym '%s'." % (hypo_to_hyper[hypo], hypo))
@@ -35,3 +37,5 @@ def do(filename_out, delimiter, mode):
             writer.writerow(row)
 
             id += 1
+
+    return pruned
