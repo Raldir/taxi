@@ -1,0 +1,295 @@
+import argparse
+import csv
+import random
+
+from train.lstm_common import *
+from train.paths_lstm_classifier import *
+from common.knowledge_resource import KnowledgeResource
+from sklearn.metrics import precision_recall_fscore_support
+
+from itertools import count
+from collections import defaultdict
+from train.paths_lstm_classifier import PathLSTMClassifier
+
+EMBEDDINGS_DIM = 50
+
+
+def load_paths_training(corpus_prefix, dataset_keys, lemma_index):
+    """
+    Override load_paths from lstm_common to include (x, y) vectors
+    :param corpus_prefix:
+    :param dataset_keys:
+    :return:
+    """
+
+    # Define the dictionaries
+    pos_index = defaultdict(count(0).next)
+    dep_index = defaultdict(count(0).next)
+    dir_index = defaultdict(count(0).next)
+
+    dummy = pos_index['#UNKNOWN#']
+    dummy = dep_index['#UNKNOWN#']
+    dummy = dir_index['#UNKNOWN#']
+
+    # Load the resource (processed corpus)
+    print 'Loading the corpus...'
+    corpus = KnowledgeResource(corpus_prefix)
+    print 'Done!'
+
+    keys = [(corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))) for (x, y) in dataset_keys]
+    paths_x_to_y = [{vectorize_path(path, lemma_index, pos_index, dep_index, dir_index): count
+                     for path, count in get_paths(corpus, x_id, y_id).iteritems()}
+                    for (x_id, y_id) in keys]
+    paths_x_to_y = [{p: c for p, c in paths_x_to_y[i].iteritems() if p is not None} for i in range(len(keys))]
+
+    paths = paths_x_to_y
+
+    empty = [dataset_keys[i] for i, path_list in enumerate(paths) if len(path_list.keys()) == 0]
+    print 'Pairs without paths:', len(empty), ', all dataset:', len(dataset_keys)
+
+    # Get the word embeddings for x and y (get a lemma index)
+    x_y_vectors = [(lemma_index.get(x, 0), lemma_index.get(y, 0)) for (x, y) in dataset_keys]
+
+    pos_inverted_index = {i: p for p, i in pos_index.iteritems()}
+    dep_inverted_index = {i: p for p, i in dep_index.iteritems()}
+    dir_inverted_index = {i: p for p, i in dir_index.iteritems()}
+
+    return x_y_vectors, paths, pos_index, dep_index, dir_index, \
+           pos_inverted_index, dep_inverted_index, dir_inverted_index
+
+
+def load_paths_prediction(corpus, dataset_keys, lemma_index, pos_index, dep_index, dir_index):
+    """
+    Override load_paths from lstm_common to include (x, y) vectors
+    :param corpus:
+    :param dataset_keys:
+    :return:
+    """
+    keys = [(corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))) for (x, y) in dataset_keys]
+    paths_x_to_y = [{vectorize_path(path, lemma_index, pos_index, dep_index, dir_index): count
+                     for path, count in get_paths(corpus, x_id, y_id).iteritems()}
+                    for (x_id, y_id) in keys]
+    paths_x_to_y = [{p: c for p, c in paths_x_to_y[i].iteritems() if p is not None} for i in range(len(keys))]
+
+    empty = [dataset_keys[i] for i, path_list in enumerate(paths_x_to_y) if len(path_list.keys()) == 0]
+    print 'Pairs without paths:', len(empty), ', all dataset:', len(dataset_keys)
+
+    # Get the word embeddings for x and y (get a lemma index)
+    x_y_vectors = [(lemma_index.get(x, 0), lemma_index.get(y, 0)) for (x, y) in dataset_keys]
+
+    return x_y_vectors, paths_x_to_y
+
+
+def training(args):
+    print("Start training...")
+    corpus_prefix = args.corpus_prefix
+    dataset_prefix = args.dataset_prefix
+    embeddings_file = args.embeddings_file
+    alpha = args.alpha
+    word_dropout_rate = args.word_dropout_rate
+
+    print('Loading the dataset...')
+    train_set = load_dataset(dataset_prefix + 'train.tsv')
+    test_set = load_dataset(dataset_prefix + 'test.tsv')
+    val_set = load_dataset(dataset_prefix + 'val.tsv')
+    y_train = [1 if 'True' in train_set[key] else 0 for key in train_set.keys()]
+    y_test = [1 if 'True' in test_set[key] else 0 for key in test_set.keys()]
+    # Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
+    # y_val = [1 if 'True' in val_set[key] else 0 for key in val_set.keys()]
+    dataset_keys = train_set.keys() + test_set.keys() + val_set.keys()
+    print('Done loading dataset')
+
+    print('Initializing word embeddings...')
+    wv, lemma_index = load_embeddings(embeddings_file)
+    print('Finished loading word embeddings.')
+
+    print('Load the paths and create the feature vectors...')
+    x_y_vectors, dataset_instances, pos_index, dep_index, dir_index, \
+    pos_inverted_index, dep_inverted_index, dir_inverted_index = load_paths_training(corpus_prefix, dataset_keys,
+                                                                                     lemma_index)
+    print('Done loading paths:')
+    print('   Number of lemmas: %d' % len(lemma_index))
+    print('   Number of pos tags: %d' % len(pos_index))
+    print('   Number of dependency labels: %d' % len(dep_index))
+    print('   Number of directions: %d' % len(dir_index))
+
+    X_train = dataset_instances[:len(train_set)]
+    X_test = dataset_instances[len(train_set):len(train_set) + len(test_set)]
+    # Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
+    # X_val = dataset_instances[len(train_set)+len(test_set):]
+
+    x_y_vectors_train = x_y_vectors[:len(train_set)]
+    x_y_vectors_test = x_y_vectors[len(train_set):len(train_set) + len(test_set)]
+    # Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
+    # x_y_vectors_val = x_y_vectors[len(train_set)+len(test_set):]
+
+    print('Create the classifier...')
+    classifier = PathLSTMClassifier(num_lemmas=len(lemma_index),
+                                    num_pos=len(pos_index),
+                                    num_dep=len(dep_index),
+                                    num_directions=len(dir_index),
+                                    n_epochs=args.epochs,
+                                    num_relations=2,
+                                    lemma_embeddings=wv,
+                                    dropout=word_dropout_rate,
+                                    alpha=alpha,
+                                    use_xy_embeddings=True)
+    print('Classifier created.')
+
+    print('Training with learning rate = %f, dropout = %f...' % (alpha, word_dropout_rate))
+    classifier.fit(X_train, y_train, x_y_vectors=x_y_vectors_train)
+    print('Classifier finished training.')
+
+    if args.evaluate:
+        print('Evaluation:')
+        pred = classifier.predict(X_test, x_y_vectors=x_y_vectors_test)
+        p, r, f1, support = precision_recall_fscore_support(y_test, pred, average='binary')
+        print('Precision: %.3f, Recall: %.3f, F1: %.3f' % (p, r, f1))
+
+    print("Training finished.")
+
+    print("Save model...")
+    classifier.save_model(args.model, [lemma_index, pos_index, dep_index, dir_index])
+    print("Model saved.")
+
+    print("Training task finished.")
+
+
+def prediction(args):
+    print("Started prediction.")
+
+    print('Loading the dataset...')
+    test_set = {}
+    with open(args.hype_file, "r") as f:
+        reader = csv.reader(f, delimiter=args.csv_delimiter)
+
+        for i, line in enumerate(reader):
+            # CSV-reader does not have an option to skip a header line...
+            if not args.csv_has_header or i > 0:
+                key = line[args.tuple_start_index:args.tuple_start_index + 2]
+                data = line[0:args.tuple_start_index] + line[args.tuple_start_index + 2:]
+
+                test_set[tuple(key)] = data
+
+    print('Dataset loaded.')
+
+    print("Load model...")
+    classifier, lemma_index, pos_index, dep_index, dir_index = load_model(args.model)
+    print("Model loaded.")
+
+    print('Loading the corpus...')
+    corpus = KnowledgeResource(args.corpus_prefix)
+    print('Corpus loaded.')
+
+    print('Load the paths and create the feature vectors...')
+    x_y_vectors_test, X_test = load_paths_prediction(corpus, test_set.keys(), lemma_index, pos_index, dep_index,
+                                                     dir_index)
+    print('Done loading paths:')
+    print('   Number of lemmas: %d' % len(lemma_index))
+    print('   Number of pos tags: %d' % len(pos_index))
+    print('   Number of dependency labels: %d' % len(dep_index))
+    print('   Number of directions: %d' % len(dir_index))
+
+    print('Start prediction...')
+    pred = classifier.predict(X_test, x_y_vectors=x_y_vectors_test, full_information=True)
+    print('Prediction finished.')
+
+    print("Write result to: %s" % os.path.abspath(args.output_file))
+    empty_relations = 0
+
+    # Copy index as key and not word -> for faster searching the corresponding word of an id
+    index_lemma = {}
+
+    for key in lemma_index:
+        index_lemma[lemma_index[key]] = key
+
+    with open(args.output_file, "w+") as f:
+        writer = csv.writer(f, delimiter=args.csv_delimiter)
+
+        for i, p in enumerate(pred):
+            hypo = None if p[0] == 0 else index_lemma[p[0]]
+            hyper = None if p[1] == 0 else index_lemma[p[1]]
+
+            if hypo is None and hyper is not None:
+                print("Unknown hyponym but known hypernym '%s' in line %s." % (hyper, i))
+                empty_relations += 1
+            elif hypo is not None and hyper is None:
+                print("Known hyponym '%s' but unknown hypernym in line %s." % (hypo, i))
+                empty_relations += 1
+            elif hypo is None and hyper is None:
+                print("Unknown hyponym and unknown hypernym in line %s." % i)
+                empty_relations += 1
+            else:
+                predicted = p[2]
+                prediction_score = p[3]
+                previous_data = test_set[(hypo, hyper)]
+
+                writer.writerow([i, hypo, hyper] + previous_data + [predicted, prediction_score])
+
+    if empty_relations > 0:
+        print("Failed to write %s results due unknown words." % empty_relations)
+
+    print("Finished writing result.")
+
+    print("Prediction task finished.")
+
+
+def main():
+    print("Started HypeNet for taxonomy generation...")
+    script_path = os.path.dirname(os.path.realpath(__file__)) + "/"
+
+    parser = argparse.ArgumentParser(description='Run HypeNet for taxonomy generation.')
+    parser.add_argument('-m', '--model', default=script_path + 'model/wiki_model')
+    parser.add_argument('-c', '--corpus_prefix', default=script_path + 'corpus/corpus/wiki')
+    parser.add_argument('--path_based', default=True)
+    parser.add_argument('--seed', default=int(random.getrandbits(32)))
+    parser.add_argument('--evaluate', default=True, help='Calculate precision, recall and F1.')
+    parser.add_argument('--dynet-gpus', default=1)
+    parser.add_argument('--dynet-mem', default=4096)
+    parser.add_argument('--dynet-seed', default=int(random.getrandbits(32)))
+
+    subparser = parser.add_subparsers(dest="mode", help='Mode')
+
+    tp = subparser.add_parser("training", help="Train a model with a dataset.")
+    tp.add_argument('-d', '--dataset_prefix', default=script_path + 'dataset/datasets/dataset_rnd/')
+    tp.add_argument('-e', '--embeddings_file', default=script_path + 'embedding/glove.6B.50d.txt')
+    tp.add_argument('--epochs', default=3)
+    tp.add_argument('--alpha', default=0.001)
+    tp.add_argument('--word_dropout_rate', default=0.5)
+
+    pp = subparser.add_parser("prediction", help="Use a trained model and predict hypernyms.")
+    pp.add_argument('-i', '--hype_file', help="CSV-file containing hypo/hyper-relations.")
+    pp.add_argument('-o', '--output_file', default=script_path + 'result.csv')
+    pp.add_argument('--csv_delimiter', default='\t')
+    pp.add_argument('--csv_has_header', default=False)
+    pp.add_argument('--tuple_start_index', default=0, type=int,
+                    help="Sets the start index of hypo/hyper-relations in CSV-files (e.g. first column is an ID)")
+
+    args = parser.parse_args()
+    print("Starting with arguments:")
+    for arg in sorted(vars(args)):
+        if arg not in ['mode']:
+            print("   %s: %s" % (arg, getattr(args, arg)))
+
+    sys.argv.insert(1, '--dynet-gpus')
+    sys.argv.insert(2, str(args.dynet_gpus))
+    sys.argv.insert(3, '--dynet-mem')
+    sys.argv.insert(4, str(args.dynet_mem))
+    sys.argv.insert(5, '--dynet-seed')
+    sys.argv.insert(6, str(args.dynet_seed))
+
+    np.random.seed(args.seed)
+
+    if args.mode == "training":
+        training(args)
+    elif args.mode == "prediction":
+        prediction(args)
+    else:
+        print("Unknown mode '%s'." % args.mode)
+
+    # predictions = prediction(args)
+    # save_predictions(args, predictions)
+
+
+if __name__ == '__main__':
+    main()

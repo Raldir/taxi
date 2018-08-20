@@ -1,0 +1,3 @@
+python train_integrated.py ../corpus/corpus/wiki ../dataset/datasets/dataset_rnd/ ../model/ ../embedding/glove.6B.50d.txt 0.001 0.5
+
+
