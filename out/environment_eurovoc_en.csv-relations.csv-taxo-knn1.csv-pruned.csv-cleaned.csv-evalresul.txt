@@ -1,0 +1,11 @@
+Taxonomy file	out/environment_eurovoc_en.csv-relations.csv-taxo-knn1.csv-pruned.csv-cleaned.csv
+Gold Standard file	eval/gold_environment.taxo
+Root	environment
+level	B	Weight	BxWeight
+0	0.40353090172062656	1.0	0.40353090172062656
+1	0.17515017604368965	0.5	0.08757508802184483
+2	0.0820796201243523	0.3333333333333333	0.0273598733747841
+3	0.19907784577037863	0.25	0.049769461442594656
+4	0.0	0.2	0.0
+Cumulative Measure	0.24886218593862053
+Recall from relation overlap	0.21839080459770116

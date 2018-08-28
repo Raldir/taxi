@@ -6,7 +6,7 @@ CLEANING_TOOL="graph_pruning/cleaning.py"
 
 EVAL_TOOL="eval/taxi_eval_archive/TExEval.jar"
 EVAL_GOLD_STANDARD_DIRECTORY="eval"
-EVAL_ROOT="science"
+EVAL_ROOT="environment"
 EVAL_JVM="-Xmx9000m"
 
 OUTPUT_DIR="out"
@@ -37,13 +37,13 @@ fi
 
 echo "======================================================================================================================"
 echo "Cycle removing: python $CYCLE_REMOVING_TOOL $1 $OUTPUT_DIR/$FILE_PRUNED_OUT $CYCLE_REMOVING_METHOD"
-CYCLES=$(python $CYCLE_REMOVING_TOOL $1 $OUTPUT_DIR/$FILE_PRUNED_OUT $CYCLE_REMOVING_METHOD | tee /dev/tty)
+CYCLES=$(python3 $CYCLE_REMOVING_TOOL $1 $OUTPUT_DIR/$FILE_PRUNED_OUT $CYCLE_REMOVING_METHOD | tee /dev/tty)
 echo "Cycle removing finished. Written to: $OUTPUT_DIR/$FILE_PRUNED_OUT"
 echo
 
 echo "======================================================================================================================"
 echo "Cleaning: python $CLEANING_TOOL $OUTPUT_DIR/$FILE_PRUNED_OUT $OUTPUT_DIR/$FILE_CLEANED_OUT $DOMAIN"
-python $CLEANING_TOOL $OUTPUT_DIR/$FILE_PRUNED_OUT $OUTPUT_DIR/$FILE_CLEANED_OUT $DOMAIN
+python3 $CLEANING_TOOL $OUTPUT_DIR/$FILE_PRUNED_OUT $OUTPUT_DIR/$FILE_CLEANED_OUT $DOMAIN
 echo "Finished cleaning. Write output to: $OUTPUT_DIR/$FILE_CLEANED_OUT"
 echo
 
@@ -64,8 +64,8 @@ L_INPUT="$(wc -l $OUTPUT_DIR/$FILE_CLEANED_OUT | grep -o -E '^[0-9]+').0"
 #echo $L_INPUT
 #echo $L_GOLD
 RECALL="$(tail -n 1 $OUTPUT_DIR/$FILE_EVAL_TOOL_RESULT | grep -o -E '[0-9]+[\.]?[0-9]*')"
-PRECISION=$(echo "print $RECALL * $L_GOLD / $L_INPUT" | python)
-F1=$(echo "print 2 * $RECALL * $PRECISION / ($PRECISION + $RECALL)" | python)
+PRECISION=$(echo "print($RECALL * $L_GOLD / $L_INPUT)" | python)
+F1=$(echo "print(2 * $RECALL * $PRECISION / ($PRECISION + $RECALL))" | python)
 F_M=$(cat $OUTPUT_DIR/$FILE_EVAL_TOOL_RESULT | grep -o -E 'Cumulative Measure.*' | grep -o -E '0\.[0-9]+')
 CYCLES_REMOVED=$(echo $CYCLES | grep -o -E 'Removed: [0-9]+' | grep -o -E '[0-9]+') # Really dirty: First get the part with the cycle output and then parse the actual cycles
 
