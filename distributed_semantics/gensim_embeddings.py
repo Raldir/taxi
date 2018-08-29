@@ -21,36 +21,40 @@ from gensim.test.utils import datapath
 from data_loader import read_all_data, read_trial_data, read_input, compound_operator
 import plotly.plotly as py
 import operator
+from nltk.corpus import wordnet as wn
 py.sign_in('RamiA', 'lAA8oTL51miiC79o3Hrz')
 # from spacy.en import English
 # parser = spacy.load('en_core_web_md')
 import pandas
 
 
-def compare_to_gold(gold, taxonomy_o, outliers, model, mode = "removal", log = False, write_file = None, threshold = 0.4, model_poincare = None):
-    taxonomy = taxonomy_o.copy()
+def compare_to_gold(gold, taxonomy, model,  model_poincare = None, outliers = [], add_back = False, threshold_add = 0.4, new_nodes = [], log = "", write_file = ""):
+    taxonomy_c = taxonomy.copy()
     global compound_operator
     removed_outliers = []
-    for element in taxonomy:
+    for element in taxonomy_c:
         if (element[1].replace(' ', compound_operator), element[2].replace(' ', compound_operator)) in outliers:
             #print("skip: " + element[1] + " " + element[2])
-            if mode == "removal_add":
+            if add_back:
                 #element_f = element[1].replace(' ', compound_operator)
                 element_f = element[1].replace(' ', compound_operator)
-                best_parent, lowest_distance = connect_to_taxonomy(taxonomy.copy(), outliers,element_f, model, model_poincare)
+                best_parent, lowest_distance = connect_to_taxonomy(taxonomy_c.copy(),element_f, model, model_poincare)
                 if lowest_distance < threshold:
                     print(element[1], best_parent)
-                    removed_outliers.append((element[0], element[1], best_parent.replace(compound_operator, ' ')))
+                    removed_outliers.append((element[1], best_parent.replace(compound_operator, ' ')))
 
                 # elif rank_root == "None":
                 #     removed_outliers.append(element)
             continue
-        removed_outliers.append(element)
+        removed_outliers.append((element[1], element[2]))
+    if new_nodes:
+        for element in new_nodes:
+            removed_outliers.append(element)
 
     correct = 0
     for element in removed_outliers:
         for ele_g in gold:
-            if element[1] == ele_g[1] and element[2] == ele_g[2]:
+            if element[0] == ele_g[1] and element[1] == ele_g[2]:
                 correct+=1
                 break
     precision = correct / float(len(removed_outliers))
@@ -61,6 +65,7 @@ def compare_to_gold(gold, taxonomy_o, outliers, model, mode = "removal", log = F
     print("Precision: " + str(precision))
     print("Recall: " + str(recall))
     print("F1: " + str(2*precision *recall / (precision + recall)))
+    print(str(recall).replace(".", ',') +'\t' + str(precision).replace(".", ',') + '\t' + str(2*precision *recall / (precision + recall)).replace(".", ','))
     if log != None:
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), log)
         with open(path + ".txt", 'w') as f:
@@ -76,8 +81,8 @@ def compare_to_gold(gold, taxonomy_o, outliers, model, mode = "removal", log = F
     if write_file != None:
         path =  os.path.join(os.path.dirname(os.path.abspath(__file__)), write_file + ".csv")
         with open(path, 'w') as f:
-            for element in removed_outliers:
-                f.write(element[0] + '\t' + element[1] + '\t' + element[2]  + '\n')
+            for i, element in enumerate(removed_outliers):
+                f.write(str(i) + '\t' + str(element[0]) + '\t' + str(element[1])  + '\n')
         f.close()
 
     return removed_outliers
@@ -100,58 +105,165 @@ def get_rank(entity1, entity2, model, threshhold):
     return rank_inv
 
 #do not need to check if words in vocab since outliers must be in vocab
-#TODO could happen that outlier would connect to new outlier, but is not regardid, so currently adding all but outlier
-def connect_to_taxonomy(relations_o, outliers, current_word, model, model_poincare):
-    relations = relations_o.copy()
+#TODO could happen that outlier would connect to new outlier, but is not regarded, so currently adding all but outlier, so order of replacing outliers is not irrelevant
+def connect_to_taxonomy(relations_o, relation_nodes, current_word, model, model_poincare, co_hypo_relevance = 40, threshold = 2):
+    #print("The current word is: ", current_word)
     global compound_operator
-    for i in range(len(relations)):
-        relations[i] = (relations[i][0], relations[i][1].replace(" ", compound_operator), relations[i][2].replace(" ", compound_operator))
-    #words_model = [relation[2] for relation in relations if relation[2] in model.wv and relation not in outliers] + [relation[1] for relation in relations if relation[1] in model.wv and relation not in outliers]
-    words_poincare = [relation[2] for relation in relations_o if relation[2] + ".n.01" in model_poincare.kv] + [relation[1] for relation in relations_o if relation[1] + ".n.01" in model_poincare.kv]
-    outlier_words = [relation[1] for relation in outliers] + [relation[0] for relation in outliers]
-    #print(outlier_words)
-    #print("Original" + str(len(words_o)) + "Remaining: " + str(len(words_a)))
-    words_poincare = list(set(words_poincare))
-    #words_model = list(set(words_model))
+
     best_parent = None
     structure = {}
-    #print(current_word)
-    #if current_word not in model.wv.vocab or current_word.replace(compound_operator, " ") not in model_poincare.kv.vocab:
-    # if current_word not in model.wv.vocab or current_word + ".n.01" not in model_poincare.kv.vocab:
-    #     print("outlier word not found in voc")
-    #     return
 
-    for parent in words_poincare:
+    for parent in relation_nodes:
         if parent == current_word:
             continue
-        structure[parent] = [relation[1] for relation in relations_o if relation[2] == parent and relation[1] in model.wv]
+        structure[parent] = [relation[1] for relation in relations_o if relation[2] == parent]
+
     lowest_distance = 100000
     for parent in structure:
-        distance_all_children = 0
-        if len(structure[parent]) < 1 or (len(structure[parent]) == 1 and current_word in structure[parent]):
+        # parent_senses = [p_sense.name() for p_sense in wn.synsets(parent) if parent in p_sense.name()]
+        # for parent_sense in parent_senses:
+        # if current_word not in model_poincare.kv.vocab:
+        #     if parent_sense in str(e):
+        #         raise ValueError(current_word, 'cannot be found in poincare embeddings')
+        #         break
+        #     else:
+        #         continue
+
+        child_distance = 0
+        len_c = len(structure[parent])
+        # for child in structure[parent]:
+        #     if child ==current_word:
+        #         continue
+        #     distance_all_children += model.wv.distance(current_word, child)
+        #     len_c+=1
+        # distance_all_children /= len_c
+        # for child in structure[parent]:
+        #     if child != current_word:
+        #         try:
+        #             #child_distance += len(model.wv.closer_than(current_word, child))
+        #             #print(child)
+        #             #child_distance += model.wv.distance(current_word, child.replace(" ", compound_operator))
+        #
+        #         except:
+        #             child_distance = 0
+        #     else:
+        #         len_c-=1
+        # try:
+        #     child_distance /= len_c
+        # except ZeroDivisionError:
+        #     child_distance = 0
+        #index_child = int(child_distance / len(model.wv.vocab) * len(model_poincare.kv.vocab)) * co_hypo_relevance
+        # if parent == 'science':
+        #     print(structure[parent])
+        #     print(len(structure[parent]))
+
+        try:
+            children = [child.replace(" ", compound_operator) for child in structure[parent] if child.replace(" ", compound_operator) in model.wv.vocab]
+            children = [child for child in children if child != current_word]
+            if not children:
+                index_child = 0
+            else:
+                most_similar_child = model.wv.most_similar_to_given(current_word, children)
+                #print(most_similar_child)
+                child_distance = model.wv.distance(current_word, most_similar_child)
+
+            index_child = child_distance * 4
+        except KeyError as e:
+            index_child = 0
+
+
+        #index_parent = get_parent_distances(current_word.replace(compound_operator, " "), model_poincare)
+        try:
+            index_parent = model_poincare.kv.distance(current_word.replace(compound_operator, " "), parent)
+        except:
+            index_parent = 0
+        # distance_parent = model_poincare.kv.distance(current_word.replace(compound_operator, " ", parent))
+        # print(current_word, parent)
+        # distance_parent = model_poincare.kv.distance(current_word + ".n.01", parent + ".n.01") /5.5
+        # print(parent, distance_parent)
+        # try:
+        #     index_parent = index_parent.index(parent.replace(compound_operator, " "))
+        # except (ValueError, AttributeError) as e:
+        #     index_parent = 0
+
+        combined_distance =  index_child
+        if combined_distance == 0:
             continue
-        len_c = 0
-        for child in structure[parent]:
-            if child ==current_word:
+        #print(current_word, parent, index_child, index_parent)
+        if combined_distance == lowest_distance:
+            height_curr = 0
+            last_parent = None
+            new_parent = parent
+            hypo = [relation[1] for relation in relations_o]
+            while new_parent != last_parent:
+                last_parent = new_parent
+                if last_parent in hypo:
+                    index = hypo.index(last_parent)
+                    new_parent = relations_o[index][2]
+                    height_curr+=1
+
+            height_old = 0
+            last_parent = None
+            new_parent = best_parent
+            while new_parent != last_parent:
+                last_parent = new_parent
+                if last_parent in hypo:
+                    index = hypo.index(last_parent)
+                    new_parent = relations_o[index][2]
+                    height_old+=1
+            if height_old > height_curr:
                 continue
-            distance_all_children += model.wv.distance(current_word, child)
-            len_c+=1
-        distance_all_children /= len_c
-        #distance_parent = model_poincare.kv.distance(current_word.replace(compound_operator, " ", parent))
-        #print(current_word, parent)
-        distance_parent = model_poincare.kv.distance(current_word + ".n.01", parent + ".n.01") /5.5
-        #print(parent, distance_parent)
-        combined_distance = distance_all_children + distance_parent
+            else:
+                best_parent = parent
         if combined_distance < lowest_distance:
             #best_parent  = parent.replace( " ", compound_operator)
-            best_parent = parent.split(".")[0]
+            best_parent = parent
+            #print(best_parent)
+            #print("current best parent", best_parent, index_child, index_parent )
             lowest_distance = combined_distance
+            #if same distance take more special parent
+
+
+            #print(current_word, parent, index_child, index_parent)
     #print(lowest_distance)
+    if best_parent == None:
+        raise KeyError()
+    if lowest_distance > threshold:
+        raise KeyError()
     return [best_parent, lowest_distance]
 
 
-def connect_new_nodes(gold, taxonomy, model, model_poincare):
-    gold_elements = []
+def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold):
+    new_nodes = set([])
+    new_relationships = []
+    gold_nodes = [relation[1] for relation in gold] + [relation[2] for relation in gold]
+    taxonomy_nodes = (set([relation[1] for relation in taxonomy] + [relation[2] for relation in taxonomy]))
+    for element in gold_nodes:
+        if element not in taxonomy_nodes:
+            new_nodes.add(element)
+    print(len(new_nodes))
+    count = 0
+    for node in new_nodes:
+        if node.replace(" ", compound_operator) in model.wv:
+            count+=1
+    print(count, "in embedding")
+
+    for node in new_nodes:
+        try:
+            parent, distance = connect_to_taxonomy(taxonomy, taxonomy_nodes, node.replace(" ", compound_operator), model, model_poincare, threshold = threshold)
+        except ValueError as e:
+            #print(str(e))
+            continue
+        except KeyError as e:
+            #print(str(e))
+            continue
+        #if distance < threshold:
+        new_relationships.append((node, parent))
+    print(new_relationships)
+    print(len(new_relationships))
+    return new_relationships
+
+
 
 
 def visualize_taxonomy(taxonomy_vectors, taxonomy_names, name):
@@ -266,7 +378,7 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
 
 def main():
     parser = argparse.ArgumentParser(description="Embeddings for Taxonomy")
-    parser.add_argument('mode', type=str, default='preload', choices=["combined_embeddings_removal_add", "combined_embeddings_removal","train_poincare", "analysis", "visualize_embedding", "visualize_embedding_poincare", "normal", "train_word2vec", "gridsearch_removal", "gridsearch_removal_add", "gridsearch_removal_add_iterative"], help="Mode of the system.")
+    parser.add_argument('mode', type=str, default='preload', choices=["combined_embeddings_new_nodes","combined_embeddings_removal_add", "combined_embeddings_removal","train_poincare", "analysis", "visualize_embedding", "visualize_embedding_poincare", "normal", "train_word2vec", "gridsearch_removal", "gridsearch_removal_add", "gridsearch_removal_add_iterative"], help="Mode of the system.")
     parser.add_argument('domain', type=str, default='science', choices=["science", "food", "environment"], help="Mode of the system.")
     parser.add_argument('embedding', type=str, nargs='?', default=None, choices=["own_and_poincare", "poincare", "poincare_all", "fasttext", "wiki2M", "wiki1M_subword", "own_w2v", "quick", "none"], help="Classifier architecture of the system.")
     parser.add_argument('embedding_name', type=str, nargs='?', default=None, help="Classifier architecture of the system.")
@@ -395,9 +507,9 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
             #f.write('--------------------------------------------------------------------------------------\n')
     elif embedding == 'own_and_poincare':
         print("init")
-        model = gensim.models.KeyedVectors.load('embeddings/own_embeddings_w2v')
-        model_poincare = PoincareModel.load('embeddings/embeddings_science_crawl_poincare_3_50')
-        #model_poincare = PoincareModel.load('embeddings/embeddings_science_crawl_merge_poincare_10_3_50_02')
+        model = gensim.models.KeyedVectors.load('embeddings/own_embeddings_w2v_n2')
+        #model_poincare = PoincareModel.load('embeddings/embeddings_' + domain +'_crawl_poincare_3_50')
+        model_poincare = PoincareModel.load('embeddings/embeddings_science_crawl_merge_poincare_10_3_50_02')
         #model_poincare = PoincareModel.load('embeddings/embeddings_poincare_wordnet')
 
     gold = []
@@ -448,24 +560,28 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
             break
 
     if mode == "train_word2vec":
-        gold,relations = read_all_data()
-        vocabulary = set([relation[2] for relation in relations] + [relation[1] for relation in relations])
-        documents = list(read_input(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data","wikipedia_utf8_filtered_20pageviews.csv" ),vocabulary))
+        gold_s,relations_s = read_all_data("science")
+        gold_e,relations_e = read_all_data("environment")
+        gold_f,relations_f = read_all_data("food")
+        vocabulary = set([relation[2] for relation in gold_s] + [relation[1] for relation in gold_s])
+        vocabulary = vocabulary | set([relation[2] for relation in gold_f] + [relation[1] for relation in gold_f])
+        vocabulary = vocabulary | set([relation[2] for relation in gold_e] + [relation[1] for relation in gold_e])
+        documents = list(read_input("/srv/data/5aly/data_text/wikipedia_utf8_filtered_20pageviews.csv",vocabulary))
         model = gensim.models.Word2Vec(size= 300, window = 5, min_count = 5, workers = 30)
         model.build_vocab(documents)
         #model.train(documents, total_examples = len(documents), epochs=10)
-        model.train(documents, total_examples=model.corpus_count, epochs=6)
-        model.save("own_embeddings_w2v")
+        model.train(documents, total_examples=model.corpus_count, epochs=30)
+        model.save("embeddings/own_embeddings_w2v_all")
 
     elif mode == "analysis":
-        gold, relations = read_all_data()
+        gold, relations = read_all_data(domain)
         voc_rel = set([relation[1] for relation in relations] + [relation[2] for relation in relations])
         voc_gold = set([relation[1] for relation in gold] + [relation[2] for relation in gold])
         print("Vokabeln in Gold: " + str(len(voc_gold)) + "Vokabeln in Taxonomy: " + str(len(voc_rel)))
 
     if not trial:
         if mode == "normal":
-            gold, relations = read_all_data()
+            gold, relations = read_all_data(domain)
             for i in range(1,10):
                 print(len(relations))
                 outliers = calculate_outliers(relations, model, mode = "abs", embedding_type = embedding)
@@ -478,7 +594,7 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
             threshholds = [float(value / 10) for value in threshholds]
             threshholds = [0.3, 0.32, 0.33, 0.35, 0.37,0.4]
             for value in threshholds:
-                gold, relations = read_all_data()
+                gold, relations = read_all_data(domain)
                 outliers = calculate_outliers(relations,model, mode = "abs", embedding_type = embedding, threshhold=  value)
                 compare_to_gold(gold, relations, outliers, model, mode = "removal", log  = "logs/" + experiment_name + "_" + str(value), write_file = "out/" + experiment_name + "_" + str(value))
 
@@ -487,7 +603,7 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
             threshholds = [float(value / 10) for value in threshholds]
             threshholds = [0.3, 0.32, 0.33, 0.35, 0.37, 0.4]
             for value in threshholds:
-                gold, relations = read_all_data()
+                gold, relations = read_all_data(domain)
                 outliers = calculate_outliers(relations,model, mode = "abs", embedding_type = embedding, threshhold=  value)
                 compare_to_gold(gold, relations, outliers, model, mode = "removal_add", log  = "logs/" + experiment_name + "_" + str(value), write_file = "out/" + experiment_name + "_" + str(value))
 
@@ -497,7 +613,7 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
             threshholds = range(2, 5)
             threshholds = [float(value / 10) for value in threshholds]
             for value in threshholds:
-                gold, relations  = read_all_data()
+                gold, relations  = read_all_data(domain)
                 for i in range(3):
                     outliers = calculate_outliers(relations,model, "abs", embedding_type = embedding , threshhold = value)
                     relations = compare_to_gold(gold, relations, outliers, model, mode = "removal_add", log  = "logs/" + experiment_name + "_" + str(value), write_file = "out/" + experiment_name + "_" + str(value))
@@ -506,24 +622,31 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
             #thresholds = [1,5,10,20,30,50]
             #thresholds = [5, 50, 500, 1000] #wordnet
 
-            thresholds = [100, 50, 15, 25, 50]
+            #hresholds = [100, 50, 25, 15, 10, 5]
+            thresholds = [15]
             for value in thresholds:
-                gold, relations = read_all_data()
-                outliers = calculate_outliers(relations, model, "abs", embedding_type = embedding, threshold = value, model_poincare = model_poincare)
-                compare_to_gold(gold, relations, outliers, model, mode = "removal", log  = "logs/" + mode + "_" + embedding + "_" + str(value), write_file = "out/" + mode + "_" + embedding + "_" + str(value))
+                gold, relations = read_all_data(domain)
+                outliers = calculate_outliers(relations, model, "abs", embedding_type = embedding, threshold = value, co_hypo_relevance = 25, model_poincare = model_poincare)
+                compare_to_gold(gold = gold, taxonomy = relations, outliers = outliers, model = model, log  = "logs/" + mode + "_" + embedding + "_" + str(value), write_file = "out/" + mode + "_" + embedding + "_" + str(value))
+
         elif mode =='combined_embeddings_removal_add':
             #thresholds = [1,5,10,20,30,50]
             #thresholds = [5, 50, 500, 1000] #wordnet
             thresholds = [0.3, 0.5, 0.8, 1, 1.5, 2, 2.5]
             for value in thresholds:
-                gold, relations = read_all_data()
+                gold, relations = read_all_data(domain)
                 #outliers = calculate_outliers(relations, model, "abs", embedding_type = embedding, threshold = 50, model_poincare = model_poincare)
                 # outliers = [('climate', 'ecology'), ('meteorology', 'oceanography'), ('astrodynamics', 'music'),
                 #  ('thermodynamics', 'chemical_engineering'), ('organic_chemistry', 'biochemistry'), ('genetics', 'biochemistry'),
                 #   ('immunology', 'biochemistry'), ('probability', 'mathematics'), ('chemistry', 'mathematics'), ('composition', 'chemistry')]
-                outliers = [('climate', 'ecology'), ('molecular_biology', 'genetics'), ('metaphysics', 'religion'), ('ancient_history', 'classics'), ('motor_control', 'communication'), ('music', 'communication'), ('os', 'communication'), ('syntax', 'communication'), ('meteorology', 'oceanography'), ('astrodynamics', 'music'), ('thermodynamics', 'chemical_engineering'), ('ancient_history', 'history'), ('genetics', 'biochemistry'), ('immunology', 'biochemistry'), ('organic_chemistry', 'biochemistry'), ('epistemology', 'metaphysics'), ('analysis', 'mathematics'), ('chemistry', 'mathematics'), ('physics', 'mathematics'), ('probability', 'mathematics'), ('numerical_analysis', 'analysis'), ('pathology', 'analysis'), ('phonetics', 'analysis'), ('toxicology', 'analysis'), ('virology', 'analysis'), ('composition', 'chemistry')]
+                compare_to_gold(gold = gold, taxonomy = relations, outliers = outliers, model = model, model_poincare = model_poincare, add_back = True, log  = "logs/" + mode + "_" + embedding + "_" + str(value), write_file = "out/" + mode + "_" + embedding + "_" + str(value), threshold = value)
+        elif mode =='combined_embeddings_new_nodes':
+            thresholds = [1, 1.5, 1.75, 2, 2.5, 10000]
+            for value in thresholds:
+                gold, relations = read_all_data(domain)
+                new_nodes = connect_new_nodes(taxonomy = relations, gold = gold, model = model, model_poincare = model_poincare, threshold = value)
+                compare_to_gold(gold = gold, taxonomy = relations, model = model, model_poincare = model_poincare, new_nodes =  new_nodes)
 
-                compare_to_gold(gold, relations, outliers, model, model_poincare = model_poincare, mode = "removal_add", log  = "logs/" + mode + "_" + embedding + "_" + str(value), write_file = "out/" + mode + "_" + embedding + "_" + str(value), threshold = value)
 if __name__ == '__main__':
     main()
 

@@ -8,6 +8,8 @@ import logging
 import gzip
 import sys
 import string
+import gensim
+from gensim.test.utils import datapath
 punctuations = string.punctuation
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS as stopwords
 
@@ -78,13 +80,13 @@ def read_input(input_file, vocabulary):
         line = line.lower()
         for word_voc in vocabulary:
             if word_voc in line and word_voc != word_voc.replace(' ', compound_operator):
-                print(word_voc + " " + str(i))
+                #print(word_voc + " " + str(i))
                 line = line.replace(word_voc, word_voc.replace(' ', compound_operator))
                 # print(freq)
                 #print(line)
             if word_voc.replace(' ', "-") in line:
                 line = line.replace(word_voc.replace(' ', '-'), word_voc.replace(' ', compound_operator))
-        cleared_line = gensim.utils.simple_preprocess (line, max_len = 30)
+        cleared_line = gensim.utils.simple_preprocess (line, max_len = 80)
         yield cleared_line
     print(freq)
 
