@@ -120,42 +120,9 @@ def connect_to_taxonomy(relations_o, relation_nodes, current_word, model, model_
 
     lowest_distance = 100000
     for parent in structure:
-        # parent_senses = [p_sense.name() for p_sense in wn.synsets(parent) if parent in p_sense.name()]
-        # for parent_sense in parent_senses:
-        # if current_word not in model_poincare.kv.vocab:
-        #     if parent_sense in str(e):
-        #         raise ValueError(current_word, 'cannot be found in poincare embeddings')
-        #         break
-        #     else:
-        #         continue
 
         child_distance = 0
         len_c = len(structure[parent])
-        # for child in structure[parent]:
-        #     if child ==current_word:
-        #         continue
-        #     distance_all_children += model.wv.distance(current_word, child)
-        #     len_c+=1
-        # distance_all_children /= len_c
-        # for child in structure[parent]:
-        #     if child != current_word:
-        #         try:
-        #             #child_distance += len(model.wv.closer_than(current_word, child))
-        #             #print(child)
-        #             #child_distance += model.wv.distance(current_word, child.replace(" ", compound_operator))
-        #
-        #         except:
-        #             child_distance = 0
-        #     else:
-        #         len_c-=1
-        # try:
-        #     child_distance /= len_c
-        # except ZeroDivisionError:
-        #     child_distance = 0
-        #index_child = int(child_distance / len(model.wv.vocab) * len(model_poincare.kv.vocab)) * co_hypo_relevance
-        # if parent == 'science':
-        #     print(structure[parent])
-        #     print(len(structure[parent]))
 
         try:
             children = [child.replace(" ", compound_operator) for child in structure[parent] if child.replace(" ", compound_operator) in model.wv.vocab]
@@ -163,10 +130,11 @@ def connect_to_taxonomy(relations_o, relation_nodes, current_word, model, model_
             if not children:
                 index_child = 0
             else:
+                # for child in children:
+                #     child_distance += model.wv.distance(current_word, child)
                 most_similar_child = model.wv.most_similar_to_given(current_word, children)
-                #print(most_similar_child)
                 child_distance = model.wv.distance(current_word, most_similar_child)
-
+            #     index_child = child_distance / len(children)
             index_child = child_distance * 4
         except KeyError as e:
             index_child = 0
@@ -174,19 +142,18 @@ def connect_to_taxonomy(relations_o, relation_nodes, current_word, model, model_
 
         #index_parent = get_parent_distances(current_word.replace(compound_operator, " "), model_poincare)
         try:
+            #index_parent = model_poincare.kv.distance(current_word.replace(compound_operator, " "), parent)
+
             index_parent = model_poincare.kv.distance(current_word.replace(compound_operator, " "), parent)
+            hierarchy_distance = model_poincare.kv.difference_in_hierarchy(current_word.replace(compound_operator, " "), parent)
+            if hierarchy_distance >= 0:
+                index_parent = 1000
+
+
         except:
             index_parent = 0
-        # distance_parent = model_poincare.kv.distance(current_word.replace(compound_operator, " ", parent))
-        # print(current_word, parent)
-        # distance_parent = model_poincare.kv.distance(current_word + ".n.01", parent + ".n.01") /5.5
-        # print(parent, distance_parent)
-        # try:
-        #     index_parent = index_parent.index(parent.replace(compound_operator, " "))
-        # except (ValueError, AttributeError) as e:
-        #     index_parent = 0
 
-        combined_distance =  index_child
+        combined_distance =  index_parent
         if combined_distance == 0:
             continue
         #print(current_word, parent, index_child, index_parent)
@@ -243,10 +210,15 @@ def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold):
             new_nodes.add(element)
     print(len(new_nodes))
     count = 0
+    count_p = 0
     for node in new_nodes:
         if node.replace(" ", compound_operator) in model.wv:
             count+=1
+    for node in new_nodes:
+        if node in model_poincare.kv:
+            count_p +=1
     print(count, "in embedding")
+    print(count_p, "in poincare_embedding")
 
     for node in new_nodes:
         try:
@@ -289,7 +261,7 @@ def get_parent_distances(word, model_poincare):
     distances_parents_sorted = []
     for element in distances_sorted:
         if element[2] < 0:
-            distances_parents_sorted.append(element[0])
+            distances_parents_sorted.append((element[0], element[1]))
     return distances_parents_sorted
 
 #create dictionary mit den begirffen wegen bindestrich
@@ -508,8 +480,8 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
     elif embedding == 'own_and_poincare':
         print("init")
         model = gensim.models.KeyedVectors.load('embeddings/own_embeddings_w2v_n2')
-        #model_poincare = PoincareModel.load('embeddings/embeddings_' + domain +'_crawl_poincare_3_50')
-        model_poincare = PoincareModel.load('embeddings/embeddings_science_crawl_merge_poincare_10_3_50_02')
+        model_poincare = PoincareModel.load('embeddings/embeddings_' + domain +'_crawl_poincare_3_50')
+        #model_poincare = PoincareModel.load('embeddings/embeddings_science_crawl_merge_poincare_10_3_50_02')
         #model_poincare = PoincareModel.load('embeddings/embeddings_poincare_wordnet')
 
     gold = []
