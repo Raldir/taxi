@@ -288,60 +288,53 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
                 cleaned_co_hyponyms.append(word)
         if len(cleaned_co_hyponyms) < 1:
             continue
-        #print(cleaned_co_hyponyms)
-        above_treshold = False
-        # while not above_treshold:
-        #     outlier = model.wv.doesnt_match(cleaned_co_hyponyms)
-        #     outlier2  = outlier +".n.01"
-        cleaned_co_hyponyms_copy = cleaned_co_hyponyms.copy()
-        for child in cleaned_co_hyponyms_copy:
-            # data_base_word_name2 = data_base_word_name + ".n.01"
-            # child2 = child + ".n.01"
 
+
+        cleaned_co_hyponyms_copy = cleaned_co_hyponyms.copy()
+            # data_base_word_name2 = data_base_word_name + ".n.01"
+        # child2 = child + ".n.01"
+        for child in cleaned_co_hyponyms_copy:
             child2  = child.replace(compound_operator, " ")
             data_base_word_name2 = data_base_word_name.replace(compound_operator, " ")
 
             # if data_base_word_name2 not in model_poincare.kv.vocab or outlier2 not in model_poincare.kv.vocab:
             #     break
-            if child2 not in model_poincare.kv.vocab or data_base_word_name2 not in model_poincare.kv.vocab:
-                continue
-            #parent_distances = get_parent_distances(outlier2, model_poincare)
-            parent_distances = get_parent_distances(child2, model_poincare)
-            child_distance = 0
-            for child_o in cleaned_co_hyponyms_copy:
-                if child_o != child:
-                    child_distance += len(model.wv.closer_than(child, child_o))
-            try:
-                child_distance /= len(cleaned_co_hyponyms) - 1
-            except ZeroDivisionError:
-                child_distance = 0
-            #index_child = int(child_distance / len(model.wv.vocab) * len(model_poincare.kv.vocab)) * co_hypo_relevance
-            index_child = int(child_distance / co_hypo_relevance)
-            limit = threshold
-            try:
-                index_parent = parent_distances.index(data_base_word_name2)
-            except ValueError:
-                index_parent = len(parent_distances) + 1
 
-            if (index_parent + index_child) < limit:
-                threshold_bool = False
-            else:
-                threshold_bool = True
-            print(child, key, index_parent, index_child)
-            if threshold_bool:
-                #outlier = outlier.split(".")[0]
-                # outliers.append((outlier, key))
-                # cleaned_co_hyponyms.remove(outlier)
+            #parent_distances = get_parent_distances(outlier2, model_poincare)
+            try:
+                children = [chi for chi in cleaned_co_hyponyms if chi != child]
+                child_distance = 0
+                for child_u in children:
+                    #most_similar_child = model.wv.most_similar_to_given(child, children
+                    child_distance += model.wv.distance(child, child_u)
+                index_child = child_distance * 8 / len(children)
+            except (KeyError,ZeroDivisionError) as e:
+                #print(str(e))
+                index_child = 0
+
+            try:
+                index_parent = model_poincare.kv.distance(child2, data_base_word_name2)
+                hierarchy_distance = model_poincare.kv.difference_in_hierarchy(child2, data_base_word_name2)
+                if hierarchy_distance >= 0:
+                    index_parent = 1
+            except KeyError:
+                index_parent = 0
+
+            index_combined = index_child + index_parent
+
+            #print(child, key, index_child)
+
+            if index_combined == 0:
+                continue
+            if index_combined > threshold:
 
                 outliers.append((child, key))
-                print(child, key, index_parent, index_child)
+                #print(child, key, index_parent, index_child)
                 cleaned_co_hyponyms.remove(child)
                 if len(cleaned_co_hyponyms) < 1:
                     #print(str(sim) + '\n')
                     break
-            else:
-                above_treshold = True
-            #print(str(sim) + '\n')
+
     print(outliers)
     return outliers
 
@@ -595,7 +588,7 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
             #thresholds = [5, 50, 500, 1000] #wordnet
 
             #hresholds = [100, 50, 25, 15, 10, 5]
-            thresholds = [15]
+            thresholds = [8, 9, 9.4, 9.8,10]
             for value in thresholds:
                 gold, relations = read_all_data(domain)
                 outliers = calculate_outliers(relations, model, "abs", embedding_type = embedding, threshold = value, co_hypo_relevance = 25, model_poincare = model_poincare)
