@@ -292,8 +292,10 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
     relations = relations_o.copy()
     structure = {}
     outliers = []
-    results = []
-    pairs = []
+    results_parents = []
+    pairs_parents = []
+    results_co = []
+    pairs_co = []
     for i in range(len(relations)):
         relations[i] = (relations[i][0], relations[i][1].replace(" ", compound_operator), relations[i][2].replace(" ", compound_operator))
 
@@ -329,16 +331,19 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
                 if children:
                     # for child_o in children:
                     most_similar_child = model.wv.most_similar_to_given(child, children)
-                    #index_child = model.wv.rank(child, most_similar_child)
+                    index_child = model.wv.distance(child, most_similar_child)
+
+                    results_co.append(index_child)
+                    pairs_co.append((child,key))
+
                     #index_child *=8
-                    index_child = 0
                     #distance_child += model.wv.rank(child, child_o)
                 else:
                     index_child = 0
-                index_child = index_child /len(model.wv.vocab) * 100
             except (KeyError,ZeroDivisionError) as e:
                 #print(str(e))
                 index_child = 0
+
 
             try:
                 node_senses = [n_sense.name() for n_sense in wn.synsets(child) if child in n_sense.name()]
@@ -356,8 +361,8 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
 
                 if index_parent == 1000000:
                     continue
-                results.append(index_parent)
-                pairs.append((child,key))
+                results_parents.append(index_parent)
+                pairs_parents.append((child,key))
 
                 # hierarchy_distance = model_poincare.kv.difference_in_hierarchy(child2, data_base_word_name2)
                 # if hierarchy_distance >= 0:
@@ -372,8 +377,8 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
 
             if index_combined == 0:
                 continue
-    max_e = 0
-    min_e = 100000000
+    # max_e = 0
+    # min_e = 100000000
     # for entry, result in results.items():
     #     if result > max:
     #         max = result
@@ -386,10 +391,13 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
     # y_pred = clf.fit_predict(np.asarray(normalized_results).reshape(-1,1))
     # distances, indices = clf.kneighbors([min(normalized_results)], 10)
 
-    kmeans = KMeans(n_clusters= 3, random_state = 0).fit(np.asarray(results).reshape(-1,1))
-    pred = kmeans.predict(np.asarray(results).reshape(-1,1))
-    print(results)
-    result_max = max(results)
+
+
+    results_parents_s = np.asarray(results_parents).reshape(-1,1)
+    kmeans = KMeans(n_clusters= 3, random_state = 0).fit(results_parents_s)
+    pred = kmeans.predict(results_parents_s)
+    print(results_parents)
+    result_max = max(results_parents)
     print(result_max)
     cluster_max = kmeans.predict(np.asarray([result_max]).reshape(1, -1))[0]
     indices = []
@@ -397,9 +405,26 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
         if element == cluster_max:
             indices.append(i)
     for index in indices:
-        print(pairs[index], results[index])
+        print(pairs_parents[index], results_parents[index])
         # print(pairs[index])
-        outliers.append(pairs[index])
+        outliers.append(pairs_parents[index])
+
+
+    results_co_s = np.asarray(results_co).reshape(-1,1)
+    kmeans = KMeans(n_clusters= 7, random_state = 0).fit(results_co_s)
+    pred = kmeans.predict(results_co_s)
+    print(results_co)
+    result_max = max(results_co)
+    print(result_max)
+    cluster_max = kmeans.predict(np.asarray([result_max]).reshape(1, -1))[0]
+    indices = []
+    for i, element in enumerate(pred):
+        if element == cluster_max:
+            indices.append(i)
+    for index in indices:
+        print(pairs_co[index], results_co[index])
+        # print(pairs[index])
+        outliers.append(pairs_co[index])
 
 
     # outliers_u = [i for i, entry in enumerate(y_pred) if  entry == -1]
