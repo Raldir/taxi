@@ -1,6 +1,11 @@
 import networkx as nx
+<<<<<<< HEAD
 from s_c_c import filter_big_scc
 from s_c_c import get_big_sccs
+=======
+from .s_c_c import filter_big_scc
+from .s_c_c import get_big_sccs
+>>>>>>> upstream/master
 import os.path
 
 

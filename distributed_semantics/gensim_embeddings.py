@@ -23,6 +23,11 @@ import plotly.plotly as py
 import operator
 from nltk.corpus import wordnet as wn
 py.sign_in('RamiA', 'lAA8oTL51miiC79o3Hrz')
+
+from sklearn import preprocessing
+import numpy as np
+from sklearn.neighbors import LocalOutlierFactor, NearestNeighbors
+from sklearn.cluster import KMeans
 # from spacy.en import English
 # parser = spacy.load('en_core_web_md')
 import pandas
@@ -109,7 +114,6 @@ def get_rank(entity1, entity2, model, threshhold):
 def connect_to_taxonomy(relations_o, relation_nodes, current_word, model, model_poincare, co_hypo_relevance = 40, threshold = 2):
     #print("The current word is: ", current_word)
     global compound_operator
-
     best_parent = None
     structure = {}
 
@@ -140,20 +144,36 @@ def connect_to_taxonomy(relations_o, relation_nodes, current_word, model, model_
             index_child = 0
 
 
-        #index_parent = get_parent_distances(current_word.replace(compound_operator, " "), model_poincare)
         try:
-            #index_parent = model_poincare.kv.distance(current_word.replace(compound_operator, " "), parent)
-
-            index_parent = model_poincare.kv.distance(current_word.replace(compound_operator, " "), parent)
-            hierarchy_distance = model_poincare.kv.difference_in_hierarchy(current_word.replace(compound_operator, " "), parent)
-            if hierarchy_distance >= 0:
-                index_parent = 1000
-
-
+            # index_parent = 100000000
+            # node_senses = [n_sense.name() for n_sense in wn.synsets(current_word) if current_word in n_sense.name()]
+            # parent_senses = [p_sense.name() for p_sense in wn.synsets(parent.replace(" ", compound_operator)) if parent.replace(" ", compound_operator) in p_sense.name()]
+            # #print(node_senses)
+            #print(parent_senses)
+            index_parent = model_poincare.kv.distance(child2, data_base_word_name2)
+            hierarchy_distance = model_poincare.kv.difference_in_hierarchy(child2, data_base_word_name2)
+                # if hierarchy_distance >= 0:
+                    #     index_parent = 1
+                    # if index < index_parent:
+                    #     index_parent = index
+            if index_parent == 100000000:
+                index_parent = 0
+        except KeyError as e:
+            #print(str(e))
+            index_parent = 0
+        # #index_parent = get_parent_distances(current_word.replace(compound_operator, " "), model_poincare)
+        # try:
+        #     #index_parent = model_poincare.kv.distance(current_word.replace(compound_operator, " "), parent)
+        #
+        #     index_parent = model_poincare.kv.distance(current_word.replace(compound_operator, " "), parent)
+        #     hierarchy_distance = model_poincare.kv.difference_in_hierarchy(current_word.replace(compound_operator, " "), parent)
+        #     if hierarchy_distance >= 0:
+        #         index_parent = 1000
+        #
         except:
             index_parent = 0
 
-        combined_distance =  index_parent
+        combined_distance =  index_child
         if combined_distance == 0:
             continue
         #print(current_word, parent, index_child, index_parent)
@@ -216,6 +236,9 @@ def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold):
             count+=1
     for node in new_nodes:
         if node in model_poincare.kv:
+        # senses = [n_sense.name() for n_sense in wn.synsets(node.replace(" ", compound_operator)) if node.replace(" ", compound_operator) in n_sense.name()]
+        # if senses:
+        #     print(senses)
             count_p +=1
     print(count, "in embedding")
     print(count_p, "in poincare_embedding")
@@ -269,6 +292,8 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
     relations = relations_o.copy()
     structure = {}
     outliers = []
+    results = []
+    pairs = []
     for i in range(len(relations)):
         relations[i] = (relations[i][0], relations[i][1].replace(" ", compound_operator), relations[i][2].replace(" ", compound_operator))
 
@@ -294,48 +319,118 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
             # data_base_word_name2 = data_base_word_name + ".n.01"
         # child2 = child + ".n.01"
         for child in cleaned_co_hyponyms_copy:
-            child2  = child.replace(compound_operator, " ")
-            data_base_word_name2 = data_base_word_name.replace(compound_operator, " ")
-
-            # if data_base_word_name2 not in model_poincare.kv.vocab or outlier2 not in model_poincare.kv.vocab:
-            #     break
-
-            #parent_distances = get_parent_distances(outlier2, model_poincare)
+            #child2  = child.replace(compound_operator, " ")
+            #data_base_word_name2 = data_base_word_name.replace(compound_operator, " ")
+            child2  = child + ".n.01"
+            data_base_word_name2 = data_base_word_name + '.n.01'
+            #distance_child =  0
             try:
                 children = [chi for chi in cleaned_co_hyponyms if chi != child]
-                child_distance = 0
-                for child_u in children:
-                    #most_similar_child = model.wv.most_similar_to_given(child, children
-                    child_distance += model.wv.distance(child, child_u)
-                index_child = child_distance * 8 / len(children)
+                if children:
+                    # for child_o in children:
+                    most_similar_child = model.wv.most_similar_to_given(child, children)
+                    #index_child = model.wv.rank(child, most_similar_child)
+                    #index_child *=8
+                    index_child = 0
+                    #distance_child += model.wv.rank(child, child_o)
+                else:
+                    index_child = 0
+                index_child = index_child /len(model.wv.vocab) * 100
             except (KeyError,ZeroDivisionError) as e:
                 #print(str(e))
                 index_child = 0
 
             try:
-                index_parent = model_poincare.kv.distance(child2, data_base_word_name2)
-                hierarchy_distance = model_poincare.kv.difference_in_hierarchy(child2, data_base_word_name2)
-                if hierarchy_distance >= 0:
-                    index_parent = 1
+                node_senses = [n_sense.name() for n_sense in wn.synsets(child) if child in n_sense.name()]
+                parent_senses = [p_sense.name() for p_sense in wn.synsets(data_base_word_name) if data_base_word_name in p_sense.name()]
+                #print(node_senses)
+                index_parent = 1000000
+                for parent_sense in parent_senses:
+                    for node_sense in node_senses:
+                        #index_parent_c = model_poincare.kv.rank(child2, data_base_word_name2)
+                        #print(node_sense, parent_sense)
+                        index_parent_c = model_poincare.kv.distance(node_sense, parent_sense)
+                        if index_parent_c < index_parent:
+                            index_parent = index_parent_c
+                #results[(child,key)] = index_parent
+
+                if index_parent == 1000000:
+                    continue
+                results.append(index_parent)
+                pairs.append((child,key))
+
+                # hierarchy_distance = model_poincare.kv.difference_in_hierarchy(child2, data_base_word_name2)
+                # if hierarchy_distance >= 0:
+                #     index_parent = 1000
             except KeyError:
                 index_parent = 0
 
-            index_combined = index_child + index_parent
-
-            #print(child, key, index_child)
+            index_combined = index_parent
+            #print(child, key, index_parent)
+                # print(index_parent)
+                # print(child, key, index_parent)
 
             if index_combined == 0:
                 continue
-            if index_combined > threshold:
+    max_e = 0
+    min_e = 100000000
+    # for entry, result in results.items():
+    #     if result > max:
+    #         max = result
+    #     if result < min:
+    #         min = result
+    # print(max,min)
+    #normalized_results = list(preprocessing.scale(results))
 
-                outliers.append((child, key))
-                #print(child, key, index_parent, index_child)
-                cleaned_co_hyponyms.remove(child)
-                if len(cleaned_co_hyponyms) < 1:
-                    #print(str(sim) + '\n')
-                    break
+    # clf = LocalOutlierFactor(n_neighbors = 20)
+    # y_pred = clf.fit_predict(np.asarray(normalized_results).reshape(-1,1))
+    # distances, indices = clf.kneighbors([min(normalized_results)], 10)
+
+    kmeans = KMeans(n_clusters= 3, random_state = 0).fit(np.asarray(results).reshape(-1,1))
+    pred = kmeans.predict(np.asarray(results).reshape(-1,1))
+    print(results)
+    result_max = max(results)
+    print(result_max)
+    cluster_max = kmeans.predict(np.asarray([result_max]).reshape(1, -1))[0]
+    indices = []
+    for i, element in enumerate(pred):
+        if element == cluster_max:
+            indices.append(i)
+    for index in indices:
+        print(pairs[index], results[index])
+        # print(pairs[index])
+        outliers.append(pairs[index])
+
+
+    # outliers_u = [i for i, entry in enumerate(y_pred) if  entry == -1]
+    # for entry in outliers_u:
+    #     print(normalized_results[entry])
+    #     print(pairs[entry])
+    #     outliers.append(pairs[entry])
+
+
+
+    # for i,entry in enumerate(normalized_results):
+    #     if entry > threshold:
+    #         outliers.append(pairs[i])
+
+    # for entry, result in results.items():
+    #     normalized_result  = (result - min) / (max - min)
+    #     #print(normalized_result)
+    #     if  normalized_result > threshold:
+    #         outliers.append(entry)
 
     print(outliers)
+        # if index_combined > threshold:
+        #
+        #     outliers.append((child, key))
+        #     #print(child, key, index_parent, index_child)
+        #     cleaned_co_hyponyms.remove(child)
+        #     if len(cleaned_co_hyponyms) < 1:
+        #         #print(str(sim) + '\n')
+        #         break
+        #
+        # print(outliers)
     return outliers
 
 
@@ -402,80 +497,13 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
                 print("Word not in Vocab")
 
 
-    elif embedding == "poincare_all":
-        #models = ["embeddings_science_crawl_poincare_10_50", "embeddings_science_crawl_poincare_3_50", "embeddings_science_crawl_poincare_5_50" ]
-        models = [
-        "embeddings_common_small_poincare_100_50", "embeddings_common_small_poincare_10_50", "embeddings_common_small_poincare_3_50", "embeddings_common_small_poincare_500_50", "embeddings_common_small_poincare_5_50",
-        "embeddings_science_crawl_combined_common_poincare_10_10_50", "embeddings_science_crawl_combined_common_poincare_10_3_50", "embeddings_science_crawl_combined_common_poincare_10_5_50",
-        "embeddings_science_crawl_combined_common_poincare_100_10_50",
-        "embeddings_science_crawl_combined_common_poincare_100_3_50", "embeddings_science_crawl_combined_common_poincare_100_5_50", "embeddings_science_crawl_combined_common_poincare_500_10_50", "embeddings_science_crawl_combined_common_poincare_500_3_50"
-        ,"embeddings_science_crawl_combined_common_poincare_500_5_50","embeddings_science_crawl_combined_common_poincare_50_10_50","embeddings_science_crawl_combined_common_poincare_50_3_50","embeddings_science_crawl_combined_common_poincare_50_5_50",
-        "embeddings_science_crawl_poincare_10_50", "embeddings_science_crawl_poincare_3_50", "embeddings_science_crawl_poincare_5_50" ]
-        #f = open(os.path.join("logs","poincare", "embedding_exemplary_results02.txt"), 'w', 1)
-        gold, relations = read_all_data()
-        all_relations = set([relation1[1] for relation1 in relations] + [relation2[2] for relation2 in relations])
-        print("all relations occur", len(all_relations))
-        for model_name in models:
-            model = PoincareModel.load('embeddings/' + model_name)
-            print("Model: ", model_name)
-            print(len(model.kv.vocab))
-            vectors = []
-            names = []
-            exist = 0
-            for relation in all_relations:
-                if relation in model.kv.vocab:
-                    exist +=1
-            print("Occurence in relations: ", exist)
-            continue
-            #f.write("Model: " + model_name + '\n')
-            #f.write(str(len(model.kv.vocab)) + '\n')
 
-            #print([word for word in model.kv.vocab.items()][:1])
-            words = ["computer science", "biology", "physics", "science", "virology", "life science", "chemistry", "earth science", "algebra", "economics", "optics" "immunology"]
-            for word in words:
-                try:
-                    print("Current word: ", word)
-                    f.write("Current word: " + word + '\n')
-                    if word in model.kv.vocab:
-                        parent =  model.kv.closest_parent(word)
-                        child = model.kv.closest_child(word)
-                        if parent != None:
-                            print("Closest Parent: ", model.kv.closest_parent(word))
-                        if child != None:
-                            print("Closest Child ", model.kv.closest_child(word))
-                        print("Descendants: ", model.kv.descendants(word))
-                        print("Ancestors: ", model.kv.ancestors(word))
-                        print("Hierarchy diff to Science: ", model.kv.difference_in_hierarchy(word, "science"))
-                        print('\n')
-                        if parent != None:
-                            f.write("Closest Parent: " + model.kv.closest_parent(word) + '\n')
-                        else:
-                            f.write("There is no parent for " + word)
-                        if child != None:
-                            f.write("Closest Child "+ str(model.kv.closest_child(word)) + '\n')
-                        else:
-                            f.write("There is no child for " + word)
-                        f.write("Descendants: " + str(model.kv.descendants(word)) + '\n')
-                        f.write("Ancestors: " +  str(model.kv.ancestors(word)) + '\n')
-                        f.write("Hierarchy diff to Science: " + str(model.kv.difference_in_hierarchy(word, "science")) + '\n')
-                        f.write('\n')
-                    else:
-                        print("Current word not in vocabulary")
-                        f.write("Current word not in vocabulary \n")
-                except:
-                    f.write("Print error for word " + word)
-                    print("Error at", word)
-
-            print('\n')
-            print('\n')
-            #f.write('\n')
-            #f.write('--------------------------------------------------------------------------------------\n')
     elif embedding == 'own_and_poincare':
         print("init")
-        model = gensim.models.KeyedVectors.load('embeddings/own_embeddings_w2v_n2')
-        model_poincare = PoincareModel.load('embeddings/embeddings_' + domain +'_crawl_poincare_3_50')
+        model = gensim.models.KeyedVectors.load('embeddings/own_embeddings_w2v_all') #n2 #all
+        #model_poincare = PoincareModel.load('embeddings/embeddings_' + domain +'_crawl_poincare_3_50')
         #model_poincare = PoincareModel.load('embeddings/embeddings_science_crawl_merge_poincare_10_3_50_02')
-        #model_poincare = PoincareModel.load('embeddings/embeddings_poincare_wordnet')
+        model_poincare = PoincareModel.load('embeddings/embeddings_poincare_wordnet')
 
     gold = []
     relations = []
@@ -510,19 +538,27 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
         visualize_taxonomy(vectors, names, experiment_name)
 
     if mode == 'train_poincare':
-        gold,relations = read_all_data()
-        freq_science = [3,5]
-        for entry_science in freq_science:
-            relations = './data/' + domain +'_crawl_' + str(entry_science) +'.tsv'
-            #relations = './data/science_crawl_merge_10_3_02.tsv'
-            poincare_rel = PoincareRelations(relations)
-            dim = 50
-            model = PoincareModel(poincare_rel, size = dim)
-            print("Starting Training...")
-            model.train(epochs=400)
-            model.save("embeddings/embeddings_" + domain + "_crawl_poincare_" + str(entry_science) + "_" + str(dim))
-            #model.save("embeddings/embeddings_science_crawl_merge_poincare_10_3_50_02")
-            break
+        # gold,relations = read_all_data()
+        # freq_science = [3,5]
+        # for entry_science in freq_science:
+        #     relations = './data/' + domain +'_crawl_' + str(entry_science) +'.tsv'
+        #     #relations = './data/science_crawl_merge_10_3_02.tsv'
+        #     poincare_rel = PoincareRelations(relations)
+        #     dim = 50
+        #     model = PoincareModel(poincare_rel, size = dim)
+        #     print("Starting Training...")
+        #     model.train(epochs=400)
+        #     model.save("embeddings/embeddings_" + domain + "_crawl_poincare_" + str(entry_science) + "_" + str(dim))
+        #     #model.save("embeddings/embeddings_science_crawl_merge_poincare_10_3_50_02")
+        #     break
+        relations = './data/poincare_common_domains.tsv'
+        #relations = './data/science_crawl_merge_10_3_02.tsv'
+        poincare_rel = PoincareRelations(relations)
+        dim = 50
+        model = PoincareModel(poincare_rel, size = dim)
+        print("Starting Training...")
+        model.train(epochs=400)
+        model.save("embeddings/poincare_common_domains_5_3" + "_" + str(dim))
 
     if mode == "train_word2vec":
         gold_s,relations_s = read_all_data("science")
@@ -572,23 +608,22 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
                 outliers = calculate_outliers(relations,model, mode = "abs", embedding_type = embedding, threshhold=  value)
                 compare_to_gold(gold, relations, outliers, model, mode = "removal_add", log  = "logs/" + experiment_name + "_" + str(value), write_file = "out/" + experiment_name + "_" + str(value))
 
-
-
-        elif mode =="gridsearch_removal_add_iterative":
-            threshholds = range(2, 5)
-            threshholds = [float(value / 10) for value in threshholds]
-            for value in threshholds:
-                gold, relations  = read_all_data(domain)
-                for i in range(3):
-                    outliers = calculate_outliers(relations,model, "abs", embedding_type = embedding , threshhold = value)
-                    relations = compare_to_gold(gold, relations, outliers, model, mode = "removal_add", log  = "logs/" + experiment_name + "_" + str(value), write_file = "out/" + experiment_name + "_" + str(value))
-
+#normalisierung skalierung einbauen
         elif mode =='combined_embeddings_removal':
             #thresholds = [1,5,10,20,30,50]
             #thresholds = [5, 50, 500, 1000] #wordnet
 
             #hresholds = [100, 50, 25, 15, 10, 5]
-            thresholds = [8, 9, 9.4, 9.8,10]
+
+            #thresholds = [4,5,7, 8, 9, 9.4, 9.8,10] for n2 w2v embedding
+            #thresholds = [0.5, 1, 1.5, 2, 2.5, 3, 3.5]
+            #thresholds = [3.2, 5,6, 7, 8]
+
+            #thresholds = [5,7, 18, 25, 50, 10000] #for rank based evaluation
+            #thresholds = [0.02, 0.05,0.08,0.1,0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] #normalized rank based evaluation
+
+            #thresholds = [-0.05, -0.1, -0.2, -0.3, -0.5, -0.6, -0.7, -0.8] #standartized thresholds
+            thresholds = [1]
             for value in thresholds:
                 gold, relations = read_all_data(domain)
                 outliers = calculate_outliers(relations, model, "abs", embedding_type = embedding, threshold = value, co_hypo_relevance = 25, model_poincare = model_poincare)
@@ -605,7 +640,8 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
                 #  ('thermodynamics', 'chemical_engineering'), ('organic_chemistry', 'biochemistry'), ('genetics', 'biochemistry'),
                 #   ('immunology', 'biochemistry'), ('probability', 'mathematics'), ('chemistry', 'mathematics'), ('composition', 'chemistry')]
                 compare_to_gold(gold = gold, taxonomy = relations, outliers = outliers, model = model, model_poincare = model_poincare, add_back = True, log  = "logs/" + mode + "_" + embedding + "_" + str(value), write_file = "out/" + mode + "_" + embedding + "_" + str(value), threshold = value)
-        elif mode =='combined_embeddings_new_nodes':
+
+        elif mode == 'combined_embeddings_new_nodes':
             thresholds = [1, 1.5, 1.75, 2, 2.5, 10000]
             for value in thresholds:
                 gold, relations = read_all_data(domain)
@@ -661,3 +697,10 @@ if __name__ == '__main__':
 #         compound_word += model.wv[part]
 #     compound_word /= (len(word_parts))
 #     return compound_word
+
+#"embeddings_common_small_poincare_100_50", "embeddings_common_small_poincare_10_50", "embeddings_common_small_poincare_3_50", "embeddings_common_small_poincare_500_50", "embeddings_common_small_poincare_5_50",
+# "embeddings_science_crawl_combined_common_poincare_10_10_50", "embeddings_science_crawl_combined_common_poincare_10_3_50", "embeddings_science_crawl_combined_common_poincare_10_5_50",
+# "embeddings_science_crawl_combined_common_poincare_100_10_50",
+# "embeddings_science_crawl_combined_common_poincare_100_3_50", "embeddings_science_crawl_combined_common_poincare_100_5_50", "embeddings_science_crawl_combined_common_poincare_500_10_50", "embeddings_science_crawl_combined_common_poincare_500_3_50"
+# ,"embeddings_science_crawl_combined_common_poincare_500_5_50","embeddings_science_crawl_combined_common_poincare_50_10_50","embeddings_science_crawl_combined_common_poincare_50_3_50","embeddings_science_crawl_combined_common_poincare_50_5_50",
+# "embeddings_science_crawl_poincare_10_50", "embeddings_science_crawl_poincare_3_50", "embeddings_science_crawl_poincare_5_50"

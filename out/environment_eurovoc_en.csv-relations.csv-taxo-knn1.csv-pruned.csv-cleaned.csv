@@ -165,20 +165,20 @@
 171	subtropical zone	tropical zone
 172	surface water	water management
 173	waste incineration	waste disposal
-175	nuisance	environment
-176	water protection	environment
-177	ecosystem	environment
-178	waste disposal	environment
+175	ecosystem	environment
+176	global warming	environment
+177	nuisance	environment
+178	bird	environment
 179	environmental law	environment
 180	ocean	environment
 181	man-made disaster	environment
-182	global warming	environment
-183	bird	environment
+182	environmental policy	environment
+183	emission allowance	environment
 184	protection of animals	environment
-185	biodiversity	environment
-186	tropical zone	environment
-187	environmental policy	environment
-188	drought	environment
-189	exploitation of the seas	environment
-190	emission allowance	environment
-191	water management	environment
+185	tropical zone	environment
+186	exploitation of the seas	environment
+187	water protection	environment
+188	biodiversity	environment
+189	waste disposal	environment
+190	water management	environment
+191	drought	environment
