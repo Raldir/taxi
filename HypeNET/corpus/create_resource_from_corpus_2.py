@@ -28,19 +28,21 @@ def main():
     term_to_id_db = bsddb.btopen(resource_prefix + '_term_to_id.db')
     path_to_id_db = bsddb.btopen(resource_prefix + '_path_to_id.db')
 
-    with codecs.open(triplet_file) as f_in:
-        with codecs.open(triplet_file + '_id', 'w') as f_out:
+    with codecs.open(triplet_file, 'r', 'utf-8') as f_in:
+        with codecs.open(triplet_file + '_id', 'w', 'utf-8') as f_out:
             for line in f_in:
                 try:
                     x, y, path = line.strip().split('\t')
-                except:
-                    print line
-                    continue
+                    x, y, path = unicode(x).encode('utf-8'), unicode(y).encode('utf-8'), unicode(path).encode('utf-8')
 
-                # Frequent path
-                x_id, y_id, path_id = term_to_id_db[x], term_to_id_db[y], path_to_id_db.get(path, -1)
-                if path_id != -1:
-                    print >> f_out, '\t'.join(map(str, (x_id, y_id, path_id)))
+                    # Frequent path
+                    x_id, y_id, path_id = term_to_id_db[x], term_to_id_db[y], path_to_id_db.get(path, -1)
+                    if path_id != -1:
+                        print >> f_out, '\t'.join(map(str, (x_id, y_id, path_id)))
+                except Exception as e:
+                    print("ERROR: %s" % e)
+		    print("Line: %s" % line)
+                    continue
 
 
 if __name__ == '__main__':
