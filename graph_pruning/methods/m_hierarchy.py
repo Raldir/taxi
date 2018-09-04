@@ -1,9 +1,10 @@
 import networkx as nx
 import methods.util.write_graph as write_graph
 import methods.util.util as util
-from zhenv5.remove_cycle_edges_by_hierarchy_greedy import scc_based_to_remove_cycle_edges_iterately
-from zhenv5.remove_cycle_edges_by_hierarchy_BF import remove_cycle_edges_BF_iterately
-from zhenv5.remove_cycle_edges_by_hierarchy_voting import remove_cycle_edges_heuristic
+
+# from .zhenv5.remove_cycle_edges_by_hierarchy_greedy import scc_based_to_remove_cycle_edges_iterately
+# from .zhenv5.remove_cycle_edges_by_hierarchy_BF import remove_cycle_edges_BF_iterately
+# from .zhenv5.remove_cycle_edges_by_hierarchy_voting import remove_cycle_edges_heuristic
 
 SUPPORTED_SCORE_METHODS = ["pagerank", "socialagony", "trueskill"]
 SUPPORTED_RANKING_METHODS = ["greedy", "forward", "backward", "voting"]
@@ -173,7 +174,7 @@ def computing_hierarchy(graph_file, players_score_func_name, filename_in=None):
             players = read_dict_from_file(output_file,key_type = int, value_type = float)
         elif os.path.isfile(output_file_2):
             print("load pre-computed trueskill from: %s" % output_file_2)
-            players = read_from_pickle(output_file_2)			
+            players = read_from_pickle(output_file_2)
         '''
         if True:
             print("start computing trueskill...")

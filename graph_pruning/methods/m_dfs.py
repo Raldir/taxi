@@ -13,7 +13,7 @@ def prepare(line):
     g.add_edge(line[1], line[2])
 
 
-def do(filename_out, delimiter, mode, gephi_out, filename_in=None):
+def do(filename_out, delimiter, mode, gephi_out):
     edges_to_be_removed = dfs_remove_back_edges()
 
     cycles_removed = util.remove_edges_from_network_graph(g, edges_to_be_removed)

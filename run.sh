@@ -5,8 +5,10 @@ CYCLE_REMOVING_METHOD="tarjan"
 CLEANING_TOOL="graph_pruning/cleaning.py"
 
 EVAL_TOOL="eval/taxi_eval_archive/TExEval.jar"
-EVAL_GOLD_STANDARD_DIRECTORY="eval"
-EVAL_ROOT="science"
+
+
+EVAL_ROOT="food"
+EVAL_GOLD_STANDARD=eval/gold_${EVAL_ROOT}.taxo
 EVAL_JVM="-Xmx9000m"
 
 OUTPUT_DIR="out"
@@ -18,7 +20,9 @@ FILE_CLEANED_OUT=${FILE_PRUNED_OUT}-cleaned.csv
 FILE_EVAL_TOOL_RESULT=${FILE_CLEANED_OUT}-evalresul.txt
 
 
-DOMAIN=$(echo $FILE_INPUT | cut -d "_" -f 1)
+
+
+DOMAIN=$EVAL_ROOT
 if [ -n "$2" ]; then
 	CYCLE_REMOVING_METHOD=$2
 fi
@@ -37,64 +41,47 @@ fi
 
 echo "======================================================================================================================"
 echo "Cycle removing: python $CYCLE_REMOVING_TOOL $1 $OUTPUT_DIR/$FILE_PRUNED_OUT $CYCLE_REMOVING_METHOD"
+
 CYCLES=$(python $CYCLE_REMOVING_TOOL $1 $OUTPUT_DIR/$FILE_PRUNED_OUT $CYCLE_REMOVING_METHOD | tee /dev/tty)
 echo "Cycle removing finished. Written to: $OUTPUT_DIR/$FILE_PRUNED_OUT"
 echo
 
 echo "======================================================================================================================"
 echo "Cleaning: python $CLEANING_TOOL $OUTPUT_DIR/$FILE_PRUNED_OUT $OUTPUT_DIR/$FILE_CLEANED_OUT $DOMAIN"
-python $CLEANING_TOOL $OUTPUT_DIR/$FILE_PRUNED_OUT $OUTPUT_DIR/$FILE_CLEANED_OUT $DOMAIN
+python3 $CLEANING_TOOL $OUTPUT_DIR/$FILE_PRUNED_OUT $OUTPUT_DIR/$FILE_CLEANED_OUT $DOMAIN
 echo "Finished cleaning. Write output to: $OUTPUT_DIR/$FILE_CLEANED_OUT"
 echo
 
 
 echo "======================================================================================================================"
-EVAL_GOLD_STANDARD_FILE=$EVAL_GOLD_STANDARD_DIRECTORY/gold_$DOMAIN.taxo
-echo "Running eval-tool: java $EVAL_JVM -jar $EVAL_TOOL $OUTPUT_DIR/$FILE_CLEANED_OUT $EVAL_GOLD_STANDARD_FILE $DOMAIN $OUTPUT_DIR/$FILE_EVAL_TOOL_RESULT"
-java $EVAL_JVM -jar $EVAL_TOOL $OUTPUT_DIR/$FILE_CLEANED_OUT $EVAL_GOLD_STANDARD_FILE $DOMAIN $OUTPUT_DIR/$FILE_EVAL_TOOL_RESULT 2> $OUTPUT_DIR/eval.out
+
+echo "Running eval-tool: java $EVAL_JVM -jar $EVAL_TOOL $OUTPUT_DIR/$FILE_CLEANED_OUT $EVAL_GOLD_STANDARD $EVAL_ROOT $OUTPUT_DIR/$FILE_EVAL_TOOL_RESULT"
+java $EVAL_JVM -jar $EVAL_TOOL $OUTPUT_DIR/$FILE_CLEANED_OUT $EVAL_GOLD_STANDARD $EVAL_ROOT $OUTPUT_DIR/$FILE_EVAL_TOOL_RESULT 2> $OUTPUT_DIR/eval.out
+
 echo "Result of eval-tool written to: $OUTPUT_DIR/$FILE_EVAL_TOOL_RESULT"
-echo
 
 
 echo "======================================================================================================================"
 
-L_GOLD="$(wc -l $EVAL_GOLD_STANDARD_FILE | grep -o -E '^[0-9]+').0"
+L_GOLD="$(wc -l $EVAL_GOLD_STANDARD | grep -o -E '^[0-9]+').0"
 L_INPUT="$(wc -l $OUTPUT_DIR/$FILE_CLEANED_OUT | grep -o -E '^[0-9]+').0"
+
 
 #echo $L_INPUT
 #echo $L_GOLD
 RECALL="$(tail -n 1 $OUTPUT_DIR/$FILE_EVAL_TOOL_RESULT | grep -o -E '[0-9]+[\.]?[0-9]*')"
-PRECISION=$(echo "print $RECALL * $L_GOLD / $L_INPUT" | python)
-F1=$(echo "print 2 * $RECALL * $PRECISION / ($PRECISION + $RECALL)" | python)
+PRECISION=$(echo "print($RECALL * $L_GOLD / $L_INPUT)" | python)
+F1=$(echo "print(2 * $RECALL * $PRECISION / ($PRECISION + $RECALL))" | python)
 F_M=$(cat $OUTPUT_DIR/$FILE_EVAL_TOOL_RESULT | grep -o -E 'Cumulative Measure.*' | grep -o -E '0\.[0-9]+')
 CYCLES_REMOVED=$(echo $CYCLES | grep -o -E 'Removed: [0-9]+' | grep -o -E '[0-9]+') # Really dirty: First get the part with the cycle output and then parse the actual cycles
 
-TAB_ID=0
-
-if [ $DOMAIN = "food" ]
-then
-   TAB_ID=1600467672
-fi
-
-if [ $DOMAIN = "environment" ]
-then
-   TAB_ID=1525925554
-fi
-
-LINK="https://docs.google.com/spreadsheets/d/1cTUfm97m3vhnOOzYvbqzhJhFQSyWySszLcA6PYf8wFY/edit#gid=$TAB_ID?usp=sharing"
-
-echo "Domain:    $DOMAIN"
 echo "Recall:    $RECALL"
 echo "Precision: $PRECISION"
 echo "F1:        $F1"
 echo "F&M:       $F_M"
 echo
-echo "Copy to $LINK"
-echo -e "$(date +%F)\t$(whoami)\ttaxi\t$1\t$CYCLE_REMOVING_METHOD\t$CYCLES_REMOVED\t$RECALL\t$PRECISION\t$F1\t$F_M"
+
+echo "Copy to https://docs.google.com/spreadsheets/d/1cTUfm97m3vhnOOzYvbqzhJhFQSyWySszLcA6PYf8wFY/edit?usp=sharing"
+echo -e "$(date +%F)\t$(whoami)\ttaxi\t$1\t$DOMAIN\t$CYCLE_REMOVING_METHOD\t$CYCLES_REMOVED\t$RECALL\t$PRECISION\t$F1\t$F_M"
 echo
 echo "Script finished."
-
-
-
-
-

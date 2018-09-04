@@ -1,6 +1,11 @@
 # Custom Files
 resources/
 resources.tgz
+taxi_output/simple_full/food/
+taxi_output/simple_full/food_wordnet/
+taxi_output/simple_full/environment_eurovoc/
+taxi_output/simple_full/science_wordnet/
+taxi_output/simple_full/science_eurovoc/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -126,3 +131,12 @@ distributed_semantics/own_embeddings_w2v.wv.vectors.npy
 poincare-embeddings/
 distributed_semantics/data/
 distributed_semantics/embeddings/
+distributed_semantics/gensim_embeddings_backup.py
+distributed_semantics/logs/
+distributed_semantics/out/
+distributed_semantics/vis/
+taxi_output/environment/
+taxi_output/food/
+taxi_output/science/
+out/
+taxi_output/

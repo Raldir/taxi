@@ -1,0 +1,949 @@
+0	'nduja	salami
+1	acini di pepe	pasta
+2	all-bran	pasta
+3	alphabet pasta	pasta
+4	anellini	pasta
+5	artichoke	pasta
+6	bagel	pasta
+7	bean	pasta
+8	bigoli	pasta
+9	bolognese sauce	pasta
+10	bucatini	pasta
+11	campanelle	pasta
+12	cannelloni	pasta
+13	capellini	pasta
+14	cavatelli	pasta
+15	conchiglie	pasta
+16	farfalle	pasta
+17	fusilli	pasta
+18	garganelli	pasta
+19	gemelli	pasta
+20	lasagnette	pasta
+21	linguine	pasta
+22	macaroni	pasta
+23	noodle	pasta
+24	orecchiette	pasta
+25	passatelli	pasta
+26	pastina	pasta
+27	pici	pasta
+28	pillus	pasta
+29	ravioli	pasta
+30	rigatoni	pasta
+31	rotelle	pasta
+32	rotini	pasta
+33	spaghetti	pasta
+34	strozzapreti	pasta
+35	tagliatelle	pasta
+36	tortellini	pasta
+37	tortelloni	pasta
+38	adobe bread	bread
+39	afghan bread	bread
+40	amish friendship bread	bread
+41	anadama bread	bread
+42	banana bread	bread
+43	barley bread	bread
+44	beer bread	bread
+45	brown bread	bread
+46	cardamom bread	bread
+47	crisp bread	bread
+48	crustless bread	bread
+49	cuban bread	bread
+50	easter bread	bread
+51	flatbread	bread
+52	fried bread	bread
+53	garlic bread	bread
+54	graham bread	bread
+55	hard dough bread	bread
+56	horsebread	bread
+57	laufabrauð	bread
+58	maltese bread	bread
+59	portuguese sweet bread	bread
+60	potato bread	bread
+61	quick bread	bread
+62	raisin bread	bread
+63	rewena bread	bread
+64	rice bread	bread
+65	rye bread	bread
+66	sacramental bread	bread
+67	salt-rising bread	bread
+68	sausage bread	bread
+69	scali bread	bread
+70	slow bread	bread
+71	sprouted bread	bread
+72	tandoor bread	bread
+73	tapalapa bread	bread
+74	tone bread	bread
+75	twist bread	bread
+76	veda bread	bread
+77	vienna bread	bread
+78	wagafi bread	bread
+79	white bread	bread
+80	whole wheat bread	bread
+81	agave syrup	syrup
+82	corn syrup	syrup
+83	flavoured syrup	syrup
+84	snow cone syrup	syrup
+85	agave syrup	sweet
+86	boiled sweet	sweet
+87	caramel	sweet
+88	chocolate truffle	sweet
+89	cranberry sauce	sweet
+90	cupcake	sweet
+91	eccles cake	sweet
+92	flourless chocolate cake	sweet
+93	fudge	sweet
+94	gummy sweet	sweet
+95	hot cross bun	sweet
+96	hummingbird cake	sweet
+97	marshmallow sweet	sweet
+98	pandebono	sweet
+99	qottab	sweet
+100	red velvet cake	sweet
+101	snack cake	sweet
+102	spice cake	sweet
+103	sucker	sweet
+104	sweet and sour pork	sweet
+105	tiramisu	sweet
+106	toffee	sweet
+107	agrodolce	sauce
+108	aioli	sauce
+109	albert sauce	sauce
+110	albufera sauce	sauce
+111	apple sauce	sauce
+112	barbecue sauce	sauce
+113	beurre blanc	sauce
+114	beurre noisette	sauce
+115	bolognese sauce	sauce
+116	bordelaise sauce	sauce
+117	bow wow sauce	sauce
+118	bread sauce	sauce
+119	breton sauce	sauce
+120	brown sauce	sauce
+121	bull's-eye barbecue sauce	sauce
+122	béarnaise sauce	sauce
+123	béchamel sauce	sauce
+124	café de paris sauce	sauce
+125	caruso sauce	sauce
+126	chimichurri	sauce
+127	cocktail sauce	sauce
+128	coulis	sauce
+129	cranberry sauce	sauce
+130	cumberland sauce	sauce
+131	curry sauce	sauce
+132	espagnole sauce	sauce
+133	fish sauce	sauce
+134	fruit sauce	sauce
+135	gastrique	sauce
+136	green sauce	sauce
+137	hard sauce	sauce
+138	harissa	sauce
+139	honey garlic sauce	sauce
+140	horseradish sauce	sauce
+141	hot sauce	sauce
+142	khrenovina sauce	sauce
+143	lobster sauce	sauce
+144	mala sauce	sauce
+145	manwich	sauce
+146	maull's barbecue sauce	sauce
+147	meunière sauce	sauce
+148	mint sauce	sauce
+149	nali sauce	sauce
+150	nantua sauce	sauce
+151	ok sauce	sauce
+152	oyster sauce	sauce
+153	pasta sauce	sauce
+154	peach sauce	sauce
+155	peanut sauce	sauce
+156	pesto	sauce
+157	phu quoc fish sauce	sauce
+158	pizza sauce	sauce
+159	romesco	sauce
+160	satay sauce	sauce
+161	sauce ravigote	sauce
+162	siu haau sauce	sauce
+163	somebody's mother's chocolate sauce	sauce
+164	soubise sauce	sauce
+165	soy sauce	sauce
+166	steak sauce	sauce
+167	suprême sauce	sauce
+168	tartar sauce	sauce
+169	tucupi	sauce
+170	velouté sauce	sauce
+171	venetian sauce	sauce
+172	worcestershire sauce	sauce
+173	wow-wow sauce	sauce
+174	xo sauce	sauce
+175	aji	pepper
+176	biscuit mix	pepper
+177	broccoli	pepper
+178	marjoram	pepper
+179	ajiaco	soup
+180	batchoy	soup
+181	bisque	soup
+182	booyah	soup
+183	chorba	soup
+184	consommé	soup
+185	corn chowder	soup
+186	french onion soup	soup
+187	garbure	soup
+188	goulash	soup
+189	kalguksu	soup
+190	kharcho	soup
+191	piti	soup
+192	potage	soup
+193	rasam	soup
+194	scotch broth	soup
+195	senate bean soup	soup
+196	soto	soup
+197	thukpa	soup
+198	alfalfa sprout	food
+199	angel food cake	food
+200	apple sauce	food
+201	aubergine	food
+202	baking mix	food
+203	banana bread	food
+204	beef	food
+205	bhakri	food
+206	blintz	food
+207	bouillon	food
+208	bread	food
+209	breadstick	food
+210	breakfast sandwich	food
+211	brown bread	food
+212	brussels sprout	food
+213	butter and margarine	food
+214	calas	food
+215	candy corn	food
+216	canola oil	food
+217	cereal	food
+218	cheese	food
+219	cheese puffs	food
+220	chestnut	food
+221	chicago-style hot dog	food
+222	chicken soup	food
+223	chocolate bar	food
+224	chocolate cake	food
+225	coconut oil	food
+226	coffee creamer	food
+227	corn	food
+228	corn oil	food
+229	cracker	food
+230	crêpe	food
+231	cuban bread	food
+232	currant bun	food
+233	dashi	food
+234	ding dong	food
+235	dip	food
+236	dough	food
+237	dried fruit	food
+238	egg	food
+239	egg drop soup	food
+240	evaporated milk	food
+241	fizzy drink	food
+242	flatbread	food
+243	food colouring	food
+244	french toast	food
+245	fresh seafood	food
+246	fruit	food
+247	fruit snack	food
+248	garlic bread	food
+249	gravy	food
+250	grilled pizza	food
+251	guacamole	food
+252	gumbo	food
+253	haggis	food
+254	hemp milk	food
+255	honey	food
+256	hors d'oeuvre	food
+257	hot dog bun	food
+258	houmous	food
+259	ice cream	food
+260	ice cream cone	food
+261	idli	food
+262	instant soup	food
+263	jerky	food
+264	kesme	food
+265	kobe beef	food
+266	kugel	food
+267	laksa	food
+268	leek	food
+269	leek soup	food
+270	lemon	food
+271	lincolnshire sausage	food
+272	lollipop	food
+273	loquat	food
+274	lunch meat	food
+275	mantou	food
+276	marshmallow	food
+277	meat	food
+278	milk	food
+279	miso soup	food
+280	muffin	food
+281	non-dairy milk	food
+282	noodle soup	food
+283	oatcake	food
+284	oats	food
+285	okonomiyaki	food
+286	okra	food
+287	olive oil	food
+288	otak-otak	food
+289	oxtail soup	food
+290	parkin	food
+291	pasta sauce	food
+292	pastry	food
+293	pear	food
+294	pie filling	food
+295	pizza	food
+296	popsicle	food
+297	pork	food
+298	potato	food
+299	potato pancake	food
+300	powdered milk	food
+301	pozole	food
+302	prepared food	food
+303	pretzel	food
+304	pumpkin soup	food
+305	quinoa	food
+306	radish	food
+307	rice	food
+308	rice bread	food
+309	roti prata	food
+310	rum cake	food
+311	rye	food
+312	salsa	food
+313	sauce	food
+314	seafood	food
+315	serabi	food
+316	sesame oil	food
+317	shirataki noodles	food
+318	side dish	food
+319	simit	food
+320	soldier	food
+321	soto ayam	food
+322	soup	food
+323	sour soup	food
+324	soybean oil	food
+325	spätzle	food
+326	sugar	food
+327	sweet roll	food
+328	taco shell	food
+329	taffy	food
+330	tallow	food
+331	tapenade	food
+332	tempeh	food
+333	toast	food
+334	tofu	food
+335	tomato soup	food
+336	tortilla	food
+337	upside-down cake	food
+338	vegetable	food
+339	vegetable oil	food
+340	vienna sausage	food
+341	waffle	food
+342	wheat	food
+343	wheatgrass	food
+344	whipped cream	food
+345	white bread	food
+346	whole wheat bread	food
+347	yaka mein	food
+348	yeast	food
+349	æbleskiver	food
+350	alheira	sausage
+351	andouille	sausage
+352	andouillette	sausage
+353	apricot	sausage
+354	black pudding	sausage
+355	bockwurst	sausage
+356	bologna sausage	sausage
+357	breakfast sausage	sausage
+358	cervelat	sausage
+359	chistorra	sausage
+360	cudighi	sausage
+361	cumberland sausage	sausage
+362	diot	sausage
+363	extrawurst	sausage
+364	falukorv	sausage
+365	frankfurter rindswurst	sausage
+366	glamorgan sausage	sausage
+367	kishka	sausage
+368	lincolnshire sausage	sausage
+369	liverwurst	sausage
+370	longaniza	sausage
+371	merguez	sausage
+372	mettwurst	sausage
+373	mortadella	sausage
+374	morteau sausage	sausage
+375	newmarket sausage	sausage
+376	nădlac sausage	sausage
+377	oxford sausage	sausage
+378	pleşcoi sausages	sausage
+379	saveloy	sausage
+380	skilandis	sausage
+381	sujuk	sausage
+382	summer sausage	sausage
+383	teewurst	sausage
+384	thuringian sausage	sausage
+385	vienna sausage	sausage
+386	weisswurst	sausage
+387	almond	fruit
+388	avocado	fruit
+389	berry	fruit
+390	binignit	fruit
+391	cherry	fruit
+392	chocolate covered fruit	fruit
+393	coconut	fruit
+394	currant	fruit
+395	date	fruit
+396	dragonfruit	fruit
+397	dried fruit	fruit
+398	fig	fruit
+399	fruit and nut snack	fruit
+400	gourd	fruit
+401	grape	fruit
+402	grapefruit	fruit
+403	guava	fruit
+404	homli fruit	fruit
+405	kiwi	fruit
+406	longan	fruit
+407	lychee	fruit
+408	mango	fruit
+409	melon	fruit
+410	nectarine	fruit
+411	papaya	fruit
+412	passion fruit	fruit
+413	pineapple	fruit
+414	plum	fruit
+415	rambutan	fruit
+416	squash	fruit
+417	starfruit	fruit
+418	sugar apple	fruit
+419	tamarind	fruit
+420	tangelo	fruit
+421	almond extract	spice
+422	aniseed	spice
+423	banana	spice
+424	basil	spice
+425	bay leaf	spice
+426	bread crumb	spice
+427	chilli powder	spice
+428	chives	spice
+429	cinnamon	spice
+430	coconut milk	spice
+431	coriander	spice
+432	cumin	spice
+433	dill	spice
+434	fennel seed	spice
+435	flour	spice
+436	garlic	spice
+437	garlic powder	spice
+438	ginger root	spice
+439	grits	spice
+440	kola nut	spice
+441	lemon grass	spice
+442	licorice	spice
+443	lime	spice
+444	mint	spice
+445	molasses	spice
+446	onion powder	spice
+447	orange	spice
+448	paprika	spice
+449	peanut	spice
+450	persimmon	spice
+451	pomegranate	spice
+452	rhubarb	spice
+453	rice wine	spice
+454	rosemary	spice
+455	sage	spice
+456	salt	spice
+457	savory	spice
+458	seed	spice
+459	shallot	spice
+460	sugar cane	spice
+461	tarragon	spice
+462	thyme	spice
+463	tomato	spice
+464	tomato paste	spice
+465	vanilla bean	spice
+466	vinegar	spice
+467	almond milk	beverage
+468	beer	beverage
+469	bottled water	beverage
+470	buttermilk	beverage
+471	carbonated water	beverage
+472	coffee	beverage
+473	corn syrup	beverage
+474	eggnog	beverage
+475	flavoured water	beverage
+476	gin	beverage
+478	hot chocolate	beverage
+479	instant noodles	beverage
+480	juice	beverage
+481	liquor	beverage
+482	mead	beverage
+483	non-alcoholic beer	beverage
+484	red wine	beverage
+485	rice milk	beverage
+486	rum	beverage
+487	sherry	beverage
+488	sushi	beverage
+489	tonic water	beverage
+490	vinegar drink	beverage
+491	water	beverage
+492	wine	beverage
+493	amandine	cake
+494	amish friendship bread	cake
+495	babka	cake
+496	baking powder	cake
+497	baking soda	cake
+498	barmbrack	cake
+499	basbousa	cake
+500	baumkuchen	cake
+501	bebinca	cake
+502	boston cream pie	cake
+503	brioche	cake
+504	bun	cake
+505	bundt cake	cake
+506	butter cake	cake
+507	cake pop	cake
+508	carrot cake	cake
+509	castella	cake
+510	chewing gum	cake
+511	chiffon cake	cake
+512	christmas cake	cake
+513	ciambella	cake
+514	coffee cake	cake
+515	crostata	cake
+516	crumpet	cake
+517	donut	cake
+518	financier	cake
+519	folar	cake
+520	fruit cake	cake
+521	ganache	cake
+522	german chocolate cake	cake
+523	ho hos	cake
+524	king cake	cake
+525	kladdkaka	cake
+526	kuchen	cake
+527	madeleine	cake
+528	marble cake	cake
+529	ontbijtkoek	cake
+530	pancake	cake
+531	panforte	cake
+532	pound cake	cake
+533	princess cake	cake
+534	pudding	cake
+535	rock cake	cake
+536	sachertorte	cake
+537	simnel cake	cake
+538	soul cake	cake
+539	spekkoek	cake
+540	sponge cake	cake
+541	start	cake
+542	sticky rice cake	cake
+543	stollen	cake
+544	torte	cake
+545	tres leches cake	cake
+546	tsoureki	cake
+547	vasilopita	cake
+548	walnut	cake
+549	wedding cake	cake
+550	whisky	cake
+551	amaranth	seed
+552	borage	seed
+553	hazelnut	seed
+554	lettuce	seed
+555	macadamia nut	seed
+556	pine nut	seed
+557	pistachio	seed
+558	sunflower seed	seed
+559	tahini	seed
+560	andouillette	andouille
+561	appetiser	pea
+562	apple	orange
+563	carrot	orange
+564	grapefruit	orange
+565	kumquat	orange
+566	peach	orange
+567	tangerine	orange
+568	lardy cake	apple
+569	pineapple	apple
+570	quince	apple
+571	sugar apple	apple
+572	apple butter	condiment
+573	artificial sweetener	condiment
+574	barbecue sauce	condiment
+575	bean paste	condiment
+577	bread sauce	condiment
+578	cheez whiz	condiment
+579	chilli oil	condiment
+580	chutney	condiment
+581	cocktail sauce	condiment
+582	crouton	condiment
+583	fish sauce	condiment
+584	fried bread	condiment
+585	honeycomb	condiment
+586	horseradish sauce	condiment
+587	hot sauce	condiment
+588	ketchup	condiment
+589	mayonnaise	condiment
+590	michigan hot dog	condiment
+591	mint sauce	condiment
+592	mustard	condiment
+593	onion	condiment
+594	oregano	condiment
+595	pasta	condiment
+596	peanut sauce	condiment
+597	pepper	condiment
+598	pistou	condiment
+599	salad dressing	condiment
+600	sausage	condiment
+601	sesame seed	condiment
+602	soy sauce	condiment
+603	spice	condiment
+604	steak sauce	condiment
+605	syrup	condiment
+606	water chestnut	condiment
+607	worcestershire sauce	condiment
+608	arisa pitha	pitha
+609	kakara pitha	pitha
+610	cardoon	artichoke
+611	jerusalem artichoke	artichoke
+612	asparagus	greens
+613	beetroot green	greens
+614	chard	greens
+615	sorrel	greens
+616	avgolemono	egg
+617	avgolemono	lemon
+618	bialy	bagel
+619	montreal-style bagel	bagel
+620	bagel toast	toast
+621	french toast	toast
+622	post toasties	toast
+623	bakery	flour
+624	breakfast cereal	flour
+625	buckwheat	flour
+626	cornmeal	flour
+627	fougasse	flour
+628	malanga	flour
+629	matzo	flour
+630	sprouted bread	flour
+631	dairy product	bakery
+632	farl	bakery
+633	bakmi	wheat
+634	buckwheat	wheat
+635	frosted mini-wheats	wheat
+636	pastiera	wheat
+637	raisin wheats	wheat
+638	shredded wheat	wheat
+639	bull's-eye barbecue sauce	barbecue sauce
+640	maull's barbecue sauce	barbecue sauce
+641	barley	bean
+642	chick pea	bean
+643	cooking oil	bean
+644	pea	bean
+645	pea soup	bean
+646	popcorn	bean
+647	ribollita	bean
+648	soy product	bean
+649	greens	barley
+650	rye bread	barley
+651	sweet potato	barley
+652	baumkuchen	kuchen
+653	bean sprout	vegetable
+654	beetroot	vegetable
+655	celery	vegetable
+656	chicory	vegetable
+657	choi sum	vegetable
+658	cucumber	vegetable
+659	fennel bulb	vegetable
+660	fiddlehead fern	vegetable
+661	herb	vegetable
+662	lotus root	vegetable
+663	mushroom	vegetable
+664	parsley	vegetable
+665	pumpkin	vegetable
+666	salad mix	vegetable
+667	spinach	vegetable
+668	turnip	vegetable
+669	watercress	vegetable
+670	beef noodle soup	noodle soup
+671	pho	beef noodle soup
+672	bitter	beer
+673	beer bread	quick bread
+674	biscuit	quick bread
+675	dacquoise	biscuit
+676	focaccia	biscuit
+677	biángbiáng noodles	noodle
+678	black noodles	noodle
+679	cellophane noodles	noodle
+680	chinese noodles	noodle
+681	chinkiang pot cover noodles	noodle
+682	dandan noodles	noodle
+683	dragon beard noodles	noodle
+684	drunken noodles	noodle
+685	duck soup noodles	noodle
+686	frozen noodles	noodle
+687	henan braised noodle	noodle
+688	henan braised noodles	noodle
+689	hot dry noodles	noodle
+690	instant noodle	noodle
+691	instant noodles	noodle
+692	jook-sing noodles	noodle
+693	korean noodle	noodle
+694	korean noodles	noodle
+695	lamian	noodle
+696	noodle with tomato egg sauce	noodle
+697	oil noodles	noodle
+698	rice noodles	noodle
+699	rice vermicelli	noodle
+700	shanghai fried noodles	noodle
+701	shirataki noodles	noodle
+702	shrimp roe noodles	noodle
+703	silver needle noodles	noodle
+704	singapore style noodle	noodle
+705	udon	noodle
+706	vietnamese noodles	noodle
+707	wonton noodles	noodle
+708	black pudding	pudding
+709	cabinet pudding	pudding
+710	cheese pudding	pudding
+711	christmas pudding	pudding
+712	eve's pudding	pudding
+713	figgy pudding	pudding
+714	hasty pudding	pudding
+715	hog's pudding	pudding
+716	kutia	pudding
+717	ladyfinger	pudding
+718	malva pudding	pudding
+719	malvern pudding	pudding
+720	pistachio pudding	pudding
+721	sago pudding	pudding
+722	spotted dick	pudding
+723	steak and kidney pudding	pudding
+724	sussex pond pudding	pudding
+725	tapioca pudding	pudding
+726	tart	pudding
+727	tembleque	pudding
+728	welf pudding	pudding
+729	boerewors	meat
+730	pork tenderloin	meat
+731	salt pork	meat
+732	bok choi	cabbage
+733	kale	cabbage
+734	kohlrabi	cabbage
+735	rutabaga	cabbage
+736	tuscan cabbage	cabbage
+737	boli	pancake
+738	boxty	pancake
+739	chinese pancake	pancake
+740	crempog	pancake
+741	david eyre's pancake	pancake
+742	eggette	pancake
+743	gundel pancake	pancake
+744	pancake and maple syrup	pancake
+745	pannekoek	pancake
+746	pitha	pancake
+747	potato pancake	pancake
+748	taiyaki	pancake
+749	boston cream doughnut	dough
+750	challah	dough
+751	coconut doughnut	dough
+752	doughnut	dough
+753	jelly doughnut	dough
+754	pandoro	dough
+755	potato doughnut	dough
+756	sour cream doughnut	dough
+757	boston cream doughnut	doughnut
+758	coconut doughnut	doughnut
+759	jelly doughnut	doughnut
+760	maple bar	doughnut
+761	potato doughnut	doughnut
+762	sour cream doughnut	doughnut
+763	bottled water	water
+764	carbonated water	water
+765	flavoured water	water
+766	mannish water	water
+767	port	water
+768	tonic water	water
+769	brandy	liqueur
+770	schnapps	liqueur
+771	sparkling wine	liqueur
+772	brazil nut	nut butter
+773	granola	nut butter
+774	breakfast cereal	cereal
+775	buc wheats cereal	cereal
+776	cereal and granola bar	cereal
+777	clackers cereal	cereal
+778	crunchy nut	cereal
+779	millet	cereal
+780	mush	cereal
+781	rocky road cereal	cereal
+782	sunny boy cereal	cereal
+783	uncle sam cereal	cereal
+784	cookie crisp	breakfast cereal
+785	corn flakes	breakfast cereal
+786	corn pops	breakfast cereal
+787	frosted flakes	breakfast cereal
+788	honey smacks	breakfast cereal
+789	nintendo cereal system	breakfast cereal
+790	oatmeal	breakfast cereal
+791	porridge	breakfast cereal
+792	post toasties	breakfast cereal
+793	quisp	breakfast cereal
+794	rice krispies	breakfast cereal
+795	scott's porage oats	breakfast cereal
+796	shredded wheat	breakfast cereal
+797	shreddies	breakfast cereal
+798	special k	breakfast cereal
+799	uncle sam cereal	breakfast cereal
+800	weetabix	breakfast cereal
+801	breakfast sausage	tofu
+802	panbrioche	brioche
+803	cabbage	broccoli
+804	cauliflower	broccoli
+805	rice noodle roll	bun
+806	teacake	bun
+807	gooey butter cake	butter cake
+808	california-style pizza	pizza
+809	chicago-style pizza	pizza
+810	detroit-style pizza	pizza
+811	greek pizza	pizza
+812	greenwich pizza	pizza
+813	grilled pizza	pizza
+814	hawaiian pizza	pizza
+815	mexican pizza	pizza
+816	neapolitan pizza	pizza
+817	new york-style pizza	pizza
+818	st. louis-style pizza	pizza
+819	sushi pizza	pizza
+820	candy cane	goody
+821	cream cheese	goody
+822	doughnut	goody
+824	galette	goody
+825	gumdrop	goody
+826	rocket	goody
+827	sorbet	goody
+828	sweet	goody
+829	vanilla extract	goody
+830	caruso sauce	pasta sauce
+831	celery root	potato
+832	sweet potato	potato
+833	corn tortilla	cheese
+834	cottage cheese	cheese
+835	cream cheese	cheese
+836	zapiekanka	cheese
+837	cheese spread	milk
+838	oat milk	milk
+839	water chestnut	chestnut
+840	chicago-style hot dog	hot dog
+841	chili dog	hot dog
+842	coney island hot dog	hot dog
+843	corn dog	hot dog
+844	italian hot dog	hot dog
+845	michigan hot dog	hot dog
+846	seattle-style hot dog	hot dog
+847	vegetarian hot dog	hot dog
+848	flourless chocolate cake	chocolate cake
+849	german chocolate cake	chocolate cake
+850	cider	vermouth
+851	cinnamon roll	pastry
+852	sfouf	pastry
+853	shredded coconut	coconut
+854	instant coffee	coffee
+855	coffee creamer	cream
+856	ice cream	cream
+857	sour cream	cream
+858	whipped cream	cream
+859	coloured sugar	sugar
+860	floss sugar	sugar
+861	condensed milk	dairy product
+862	cottage cheese	dairy product
+863	cream	dairy product
+864	frozen dessert	dairy product
+865	frozen meat	dairy product
+866	sour cream	dairy product
+867	yoghurt	dairy product
+868	cooking spray	cooking oil
+869	corn tortilla	tortilla
+870	curry ketchup	ketchup
+871	dobos torte	torte
+872	esterházy torte	torte
+873	prinzregententorte	torte
+874	sachertorte	torte
+875	dobos torte	sponge cake
+876	honey dew donut	donut
+877	farfel	dried fruit
+878	dundee cake	fruit cake
+879	empanada	pie
+880	pecan	pie
+881	pie crust	pie
+882	supreme	pie
+883	yam	pie
+884	empanada	panada
+885	phu quoc fish sauce	fish sauce
+886	flatbrød	flatbread
+887	pita	flatbread
+888	flummery	porridge
+889	panfocaccia	focaccia
+890	fresh seafood	seafood
+891	frozen seafood	seafood
+892	tinned seafood	seafood
+893	non-dairy frozen dessert	frozen dessert
+894	sherbet	frozen dessert
+895	frozen yoghurt	yoghurt
+896	fruit bun	hot cross bun
+897	fudge cake	layer cake
+898	hot milk cake	layer cake
+899	opera cake	layer cake
+900	pie	layer cake
+901	mushroom gravy	gravy
+902	red-eye gravy	gravy
+903	gypsy tart	tart
+904	hard sauce	sherry
+905	honey bunches of oats	honey
+906	hot dog	deli meat
+907	salami	deli meat
+908	infusion	juice
+909	mangosteen	juice
+910	passion fruit	juice
+911	kalach	white bread
+912	pullman loaf	white bread
+913	kugelis	kugel
+914	limequat	kumquat
+915	marinade	lime
+916	liqueur	whisky
+917	vodka	liquor
+918	longaniza	longan
+919	rouille	mayonnaise
+920	milky	candy bar
+921	nougat	candy bar
+922	minestrone	tomato
+923	mock turtle soup	turtle soup
+924	parsnip	onion
+925	red peas soup	pea soup
+926	peanut oil	peanut
+927	pizza sauce	supreme
+928	pork chop	fresh meat
+929	prepared side dish	side dish
+930	pumpkin seed	sesame seed
+931	styrian sour soup	sour soup
+932	soy milk	soy product
+933	soy nut	soy product
+934	thuringian sausage	bratwurst
+935	vector	yeast
+936	walnut oil	vegetable oil
+937	waffle and pancake mix	waffle
+938	white wine	wine
+940	condiment	food
+941	layer cake	food
+942	cake	food
+943	beverage	food
+944	goody	food
+945	candy bar	food
+946	vermouth	food
+947	panada	food
+948	fresh meat	food
+949	deli meat	food
+950	nut butter	food
+951	turtle soup	food
+952	bratwurst	food
