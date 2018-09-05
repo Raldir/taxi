@@ -290,15 +290,13 @@ def get_parent_distances(word, model_poincare):
             distances_parents_sorted.append((element[0], element[1]))
     return distances_parents_sorted
 
-#create dictionary mit den begirffen wegen bindestrich
-def calculate_outliers(relations_o, model, mode, embedding_type = None, threshold = None, co_hypo_relevance = 40, model_poincare = None):
-    relations = relations_o.copy()
+def calculate_ranks(relations_o, model, model_poincare = None, current_node = None):
     structure = {}
-    outliers = []
     results_parents = []
     pairs_parents = []
     results_co = []
     pairs_co = []
+    relations = relations_o.copy()
     for i in range(len(relations)):
         relations[i] = (relations[i][0], relations[i][1].replace(" ", compound_operator), relations[i][2].replace(" ", compound_operator))
 
@@ -322,32 +320,26 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
 
 
         cleaned_co_hyponyms_copy = cleaned_co_hyponyms.copy()
-            # data_base_word_name2 = data_base_word_name + ".n.01"
-        # child2 = child + ".n.01"
-        for child in cleaned_co_hyponyms_copy:
-            child2  = child.replace(compound_operator, " ")
-            data_base_word_name2 = data_base_word_name.replace(compound_operator, " ")
-            # child2  = child + ".n.01"
-            # data_base_word_name2 = data_base_word_name + '.n.01'
-            #distance_child =  0
-            try:
-                children = [chi for chi in cleaned_co_hyponyms if chi != child]
-                if children:
-                    # for child_o in children:
+        if current_node == None:
+            for child in cleaned_co_hyponyms_copy:
+                child2  = child.replace(compound_operator, " ")
+                data_base_word_name2 = data_base_word_name.replace(compound_operator, " ")
+                try:
+                    children = [chi for chi in cleaned_co_hyponyms if chi != child]
+                    if children:
+                        most_similar_child = model.wv.most_similar_to_given(child, children)
+                        index_child = model.wv.distance(child, most_similar_child)
 
-                    most_similar_child = model.wv.most_similar_to_given(child, children)
-                    index_child = model.wv.rank(child, most_similar_child)
+                        results_co.append(index_child)
+                        pairs_co.append((child,key))
 
-                    results_co.append(index_child)
-                    pairs_co.append((child,key))
-
-                    #index_child *=8
-                    #distance_child += model.wv.rank(child, child_o)
-                else:
+                        #index_child *=8
+                        #distance_child += model.wv.rank(child, child_o)
+                    else:
+                        index_child = 0
+                except (KeyError,ZeroDivisionError) as e:
+                    #print(str(e))
                     index_child = 0
-            except (KeyError,ZeroDivisionError) as e:
-                #print(str(e))
-                index_child = 0
 
 
             try:
@@ -373,9 +365,6 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
                 index_parent = model_poincare.kv.rank(child2, data_base_word_name2)
 
 
-
-                #results[(child,key)] = index_parent
-
                 if index_parent == 1000000:
                     continue
                 results_parents.append(index_parent)
@@ -388,21 +377,23 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
                 index_parent = 0
 
             index_combined = index_parent
-            #print(child, key, index_parent)
-                # print(index_parent)
-                # print(child, key, index_parent)
 
             if index_combined == 0:
                 continue
+    return [results_parents, pairs_parents, results_co, pairs_co]
 
+#create dictionary mit den begirffen wegen bindestrich
+def calculate_outliers(relations_o, model, mode, embedding_type = None, threshold = None, co_hypo_relevance = 40, model_poincare = None):
+    outliers = []
 
+    results_parents, pairs_parents, results_co, pairs_co = calculate_ranks(relations_o, model, model_poincare)
     results_normalized1= list(preprocessing.scale(results_parents))
 
     results_normalized2= list(preprocessing.scale(results_co))
 
 
     results_normalized = results_normalized1 + results_normalized2
-    #
+
     # pairs_all = []
     # results_all = []
     # for i, element in enumerate(pairs_parents):
@@ -416,123 +407,18 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
     #     if element not in pairs_parents:
     #         results_all.append(results_normalized[len(results_parents) + i])
     #         pairs_all.append(element)
-    #
-    # num_clusters = threshold#15 wordnet #6 own_poincare
-    # results_all_s = np.asarray(results_all).reshape(-1,1)
-    # kmeans = KMeans(n_clusters=num_clusters, random_state = 0).fit(results_all_s) #3 for wordnet
-    # pred = kmeans.predict(results_all_s)
-    # #print(pred)
-    # pred_common = Counter(pred).most_common(2)
-    # main_cluster,_ = pred_common[0]
-    # secondary_cluster, _ = pred_common[1]
-    # #print(main_cluster)
-    # indices = []
-    # remaining = results_all.copy()
-    #
-    # for j in range(num_clusters):
-    #     result_max = max(remaining)
-    #     cluster_max = kmeans.predict(np.asarray([result_max]).reshape(1, -1))[0]
-    #     #print(cluster_max)
-    #     if cluster_max == main_cluster:
-    #         break
-    #     #print(cluster_max)
-    #     #print(pred)
-    #     for i, element in enumerate(pred):
-    #         if element == cluster_max:
-    #             #print(results_all[i])
-    #             indices.append(i)
-    #             remaining.remove(results_all[i])
-    # for index in indices:
-    #     #print(parents_all[index], results_all[index])
-    #     # print(pairs[index])
-    #
-    #     outliers.append(pairs_all[index])
-    #     #outliers.append(pairs_parents[index])
-
-
-
+    # outliers = find_outliers(results_all, pairs_all, threshold)
 
 
     outliers_parents  = set([])
     outliers_co = set([])
-
-
     #POINCARE
-    num_clusters = threshold#15 wordnet #6 own_poincare
-    results_all_s = np.asarray(results_normalized1).reshape(-1,1)
-    kmeans = KMeans(n_clusters=num_clusters, random_state = 0).fit(results_all_s) #3 for wordnet
-    pred = kmeans.predict(results_all_s)
-    #print(pred)
-    pred_common = Counter(pred).most_common(2)
-    main_cluster,_ = pred_common[0]
-    secondary_cluster, _ = pred_common[1]
-    #print(main_cluster)
-    indices = []
-    remaining = results_normalized1.copy()
-
-    for j in range(num_clusters):
-        result_max = max(remaining)
-        cluster_max = kmeans.predict(np.asarray([result_max]).reshape(1, -1))[0]
-        #print(cluster_max)
-        if cluster_max == main_cluster:
-            break
-        #print(cluster_max)
-        #print(pred)
-        for i, element in enumerate(pred):
-            if element == cluster_max:
-                #print(results_all[i])
-                indices.append(i)
-                remaining.remove(results_normalized1[i])
-    for index in indices:
-        #print(parents_all[index], results_all[index])
-        # print(pairs[index])
-
-        outliers_parents.add(pairs_parents[index])
-        #outliers.append(pairs_parents[index])
-
-
+    outliers_parents = find_outliers(results_normalized1, pairs_parents, threshold)
     #CO_OCCURENCE
-    num_clusters = threshold#15 wordnet #6 own_poincare
-    results_all_s = np.asarray(results_normalized2).reshape(-1,1)
-    kmeans = KMeans(n_clusters=num_clusters, random_state = 0).fit(results_all_s) #3 for wordnet
-    pred = kmeans.predict(results_all_s)
-    #print(pred)
-    pred_common = Counter(pred).most_common(2)
-    main_cluster,_ = pred_common[0]
-    secondary_cluster, _ = pred_common[1]
-    #print(main_cluster)
-    indices = []
-    remaining = results_normalized2.copy()
-
-    for j in range(num_clusters):
-        result_max = max(remaining)
-        cluster_max = kmeans.predict(np.asarray([result_max]).reshape(1, -1))[0]
-        #print(cluster_max)
-        if cluster_max == main_cluster:
-            break
-        #print(cluster_max)
-        #print(pred)
-        for i, element in enumerate(pred):
-            if element == cluster_max:
-                #print(results_all[i])
-                indices.append(i)
-                remaining.remove(results_normalized2[i])
-    for index in indices:
-        #print(parents_all[index], results_all[index])
-        # print(pairs[index])
-
-        outliers_co.add(pairs_co[index])
-        #outliers.append(pairs_co[index])
-    # print(outliers_co)
-    # print(outliers_parents)
-
-    outliers = list(outliers_parents.intersection(outliers_co))
-
+    outliers_co = find_outliers(results_normalized2, pairs_co, threshold)
+    #outliers = list(outliers_parents.intersection(outliers_co))
     #outliers = list(outliers_parents | outliers_co)
-
-    #outliers = list(outliers_co)
-
-
+    outliers = list(outliers_parents)
 
 
     #print("outlier edges num:", len(outliers))
@@ -541,6 +427,38 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
     return outliers
 
 
+def find_outliers(results, pairs, threshold):
+    outliers = set([])
+    num_clusters = threshold#15 wordnet #6 own_poincare
+    results_all_s = np.asarray(results).reshape(-1,1)
+    kmeans = KMeans(n_clusters=num_clusters, random_state = 0).fit(results_all_s) #3 for wordnet
+    pred = kmeans.predict(results_all_s)
+    #print(pred)
+    pred_common = Counter(pred).most_common(2)
+    main_cluster,_ = pred_common[0]
+    secondary_cluster, _ = pred_common[1]
+    #print(main_cluster)
+    indices = []
+    remaining = results.copy()
+
+    for j in range(num_clusters):
+        result_max = max(remaining)
+        cluster_max = kmeans.predict(np.asarray([result_max]).reshape(1, -1))[0]
+        #print(cluster_max)
+        if cluster_max == main_cluster:
+            break
+        #print(cluster_max)
+        #print(pred)
+        for i, element in enumerate(pred):
+            if element == cluster_max:
+                #print(results_all[i])
+                indices.append(i)
+                remaining.remove(results[i])
+    for index in indices:
+        #print(parents_all[index], results_all[index])
+        # print(pairs[index])
+        outliers.add(pairs[index])
+    return outliers
 
 
 def main():
@@ -722,7 +640,7 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
             #thresholds = [0.02, 0.05,0.08,0.1,0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] #normalized rank based evaluation
 
             #thresholds = [-0.05, -0.1, -0.2, -0.3, -0.5, -0.6, -0.7, -0.8] #standartized thresholds
-            thresholds = range(2,42, 5)
+            thresholds = range(6,7)
             for value in thresholds:
                 gold, relations = read_all_data(domain)
                 outliers = calculate_outliers(relations, model, "abs", embedding_type = embedding, threshold = value, co_hypo_relevance = 25, model_poincare = model_poincare)
