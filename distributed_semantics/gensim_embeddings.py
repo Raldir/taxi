@@ -24,6 +24,9 @@ import operator
 from nltk.corpus import wordnet as wn
 py.sign_in('RamiA', 'lAA8oTL51miiC79o3Hrz')
 
+from collections import Counter
+
+
 from sklearn import preprocessing
 import numpy as np
 from sklearn.neighbors import LocalOutlierFactor, NearestNeighbors
@@ -64,13 +67,13 @@ def compare_to_gold(gold, taxonomy, model,  model_poincare = None, outliers = []
                 break
     precision = correct / float(len(removed_outliers))
     recall = correct / float(len(gold))
-    print(float(len(removed_outliers)))
-    print(float(len(gold)))
-    print("Correct: " + str(correct))
-    print("Precision: " + str(precision))
-    print("Recall: " + str(recall))
-    print("F1: " + str(2*precision *recall / (precision + recall)))
-    print(str(recall).replace(".", ',') +'\t' + str(precision).replace(".", ',') + '\t' + str(2*precision *recall / (precision + recall)).replace(".", ','))
+    # print(float(len(removed_outliers)))
+    # print(float(len(gold)))
+    # print("Correct: " + str(correct))
+    # print("Precision: " + str(precision))
+    # print("Recall: " + str(recall))
+    # print("F1: " + str(2*precision *recall / (precision + recall)))
+    print(str(recall).replace(".", ',') +'\t' + str(precision).replace(".", ',') + '\t' + str(2*precision *recall / (precision + recall)).replace(".", ',') + '\t' +  str(len(outliers)))
     if log != None:
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), log)
         with open(path + ".txt", 'w') as f:
@@ -333,7 +336,7 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
                     # for child_o in children:
 
                     most_similar_child = model.wv.most_similar_to_given(child, children)
-                    index_child = model.wv.distance(child, most_similar_child)
+                    index_child = model.wv.rank(child, most_similar_child)
 
                     results_co.append(index_child)
                     pairs_co.append((child,key))
@@ -351,17 +354,24 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
 
                 # node_senses = [n_sense.name() for n_sense in wn.synsets(child) if child in n_sense.name()]
                 # parent_senses = [p_sense.name() for p_sense in wn.synsets(data_base_word_name) if data_base_word_name in p_sense.name()]
+                # #print(parent_senses)
+                # #print(node_senses)
                 # #print(node_senses)
                 # index_parent = 1000000
                 # for parent_sense in parent_senses:
                 #     for node_sense in node_senses:
-                #         #index_parent_c = model_poincare.kv.rank(child2, data_base_word_name2)
+                #         #print(child, data_base_word_name)
+                #         index_parent_c = model_poincare.kv.rank(node_sense, parent_sense)
+                #         #ndex_parent_c = 100000000000000000000000
+                #         #print(index_parent_c)
                 #         #print(node_sense, parent_sense)
-                #         index_parent_c = model_poincare.kv.distance(node_sense, parent_sense)
+                #     #    index_parent_c = model_poincare.kv.distance(node_sense, parent_sense)
                 #         if index_parent_c < index_parent:
                 #             index_parent = index_parent_c
 
+                #index_parent  = 1000000
                 index_parent = model_poincare.kv.rank(child2, data_base_word_name2)
+
 
 
                 #results[(child,key)] = index_parent
@@ -386,133 +396,148 @@ def calculate_outliers(relations_o, model, mode, embedding_type = None, threshol
                 continue
 
 
-    # max_e = 0
-    # min_e = 100000000
-    # for entry, result in results_parents + results_co:
-    #     if result > max:
-    #         max = result
-    #     if result < min:
-    #         min = result
-    # print(max,min)
-
-    results_co = []
-    pairs_co = []
-
     results_normalized1= list(preprocessing.scale(results_parents))
-    #results_normalized2= list(preprocessing.scale(results_co))
-    #results_normalized = results_normalized1 + results_normalized2
-    results_normalized = results_normalized1
 
-    parents_all = []
-    results_all = []
-    for i, element in enumerate(pairs_parents):
-        if element in pairs_co:
-            results_all.append(results_normalized[i] + results_normalized[len(results_parents) + pairs_co.index(element)] / 2)
-            parents_all.append(element)
-        else:
-            results_all.append(results_normalized[i])
-            parents_all.append(element)
-    for i, element in enumerate(pairs_co):
-        if element not in pairs_parents:
-            results_all.append(results_normalized[len(results_parents) + i])
-            parents_all.append(element)
-    # clf = LocalOutlierFactor(n_neighbors = 20)
-    # y_pred = clf.fit_predict(np.asarray(normalized_results).reshape(-1,1))
-    # distances, indices = clf.kneighbors([min(normalized_results)], 10)
+    results_normalized2= list(preprocessing.scale(results_co))
 
 
+    results_normalized = results_normalized1 + results_normalized2
+    #
+    # pairs_all = []
+    # results_all = []
+    # for i, element in enumerate(pairs_parents):
+    #     if element in pairs_co:
+    #         results_all.append((results_normalized[i] + results_normalized[len(results_parents) + pairs_co.index(element)]) / 2)
+    #         pairs_all.append(element)
+    #     else:
+    #         results_all.append(results_normalized[i])
+    #         pairs_all.append(element)
+    # for i, element in enumerate(pairs_co):
+    #     if element not in pairs_parents:
+    #         results_all.append(results_normalized[len(results_parents) + i])
+    #         pairs_all.append(element)
+    #
+    # num_clusters = threshold#15 wordnet #6 own_poincare
+    # results_all_s = np.asarray(results_all).reshape(-1,1)
+    # kmeans = KMeans(n_clusters=num_clusters, random_state = 0).fit(results_all_s) #3 for wordnet
+    # pred = kmeans.predict(results_all_s)
+    # #print(pred)
+    # pred_common = Counter(pred).most_common(2)
+    # main_cluster,_ = pred_common[0]
+    # secondary_cluster, _ = pred_common[1]
+    # #print(main_cluster)
+    # indices = []
+    # remaining = results_all.copy()
+    #
+    # for j in range(num_clusters):
+    #     result_max = max(remaining)
+    #     cluster_max = kmeans.predict(np.asarray([result_max]).reshape(1, -1))[0]
+    #     #print(cluster_max)
+    #     if cluster_max == main_cluster:
+    #         break
+    #     #print(cluster_max)
+    #     #print(pred)
+    #     for i, element in enumerate(pred):
+    #         if element == cluster_max:
+    #             #print(results_all[i])
+    #             indices.append(i)
+    #             remaining.remove(results_all[i])
+    # for index in indices:
+    #     #print(parents_all[index], results_all[index])
+    #     # print(pairs[index])
+    #
+    #     outliers.append(pairs_all[index])
+    #     #outliers.append(pairs_parents[index])
 
-    results_all_s = np.asarray(results_all).reshape(-1,1)
-    kmeans = KMeans(n_clusters=10, random_state = 0).fit(results_all_s) #3 for wordnet
+
+
+
+
+    outliers_parents  = set([])
+    outliers_co = set([])
+
+
+    #POINCARE
+    num_clusters = threshold#15 wordnet #6 own_poincare
+    results_all_s = np.asarray(results_normalized1).reshape(-1,1)
+    kmeans = KMeans(n_clusters=num_clusters, random_state = 0).fit(results_all_s) #3 for wordnet
     pred = kmeans.predict(results_all_s)
+    #print(pred)
+    pred_common = Counter(pred).most_common(2)
+    main_cluster,_ = pred_common[0]
+    secondary_cluster, _ = pred_common[1]
+    #print(main_cluster)
     indices = []
-    remaining = results_all.copy()
+    remaining = results_normalized1.copy()
 
-    for j in range(8):
+    for j in range(num_clusters):
         result_max = max(remaining)
         cluster_max = kmeans.predict(np.asarray([result_max]).reshape(1, -1))[0]
-        print(cluster_max)
-        print(pred)
+        #print(cluster_max)
+        if cluster_max == main_cluster:
+            break
+        #print(cluster_max)
+        #print(pred)
         for i, element in enumerate(pred):
             if element == cluster_max:
-                print(results_all[i])
+                #print(results_all[i])
                 indices.append(i)
-                remaining.remove(results_all[i])
+                remaining.remove(results_normalized1[i])
     for index in indices:
-        print(parents_all[index], results_all[index])
+        #print(parents_all[index], results_all[index])
         # print(pairs[index])
-        outliers.append(parents_all[index])
+
+        outliers_parents.add(pairs_parents[index])
+        #outliers.append(pairs_parents[index])
+
+
+    #CO_OCCURENCE
+    num_clusters = threshold#15 wordnet #6 own_poincare
+    results_all_s = np.asarray(results_normalized2).reshape(-1,1)
+    kmeans = KMeans(n_clusters=num_clusters, random_state = 0).fit(results_all_s) #3 for wordnet
+    pred = kmeans.predict(results_all_s)
+    #print(pred)
+    pred_common = Counter(pred).most_common(2)
+    main_cluster,_ = pred_common[0]
+    secondary_cluster, _ = pred_common[1]
+    #print(main_cluster)
+    indices = []
+    remaining = results_normalized2.copy()
+
+    for j in range(num_clusters):
+        result_max = max(remaining)
+        cluster_max = kmeans.predict(np.asarray([result_max]).reshape(1, -1))[0]
+        #print(cluster_max)
+        if cluster_max == main_cluster:
+            break
+        #print(cluster_max)
+        #print(pred)
+        for i, element in enumerate(pred):
+            if element == cluster_max:
+                #print(results_all[i])
+                indices.append(i)
+                remaining.remove(results_normalized2[i])
+    for index in indices:
+        #print(parents_all[index], results_all[index])
+        # print(pairs[index])
+
+        outliers_co.add(pairs_co[index])
+        #outliers.append(pairs_co[index])
+    # print(outliers_co)
+    # print(outliers_parents)
+
+    outliers = list(outliers_parents.intersection(outliers_co))
+
+    #outliers = list(outliers_parents | outliers_co)
+
+    #outliers = list(outliers_co)
 
 
 
 
+    #print("outlier edges num:", len(outliers))
+    #print(outliers)
 
-    # results_parents_s = np.asarray(results_parents).reshape(-1,1)
-    # kmeans = KMeans(n_clusters= 3, random_state = 0).fit(results_parents_s)
-    # pred = kmeans.predict(results_parents_s)
-    # print(results_parents)
-    # result_max = max(results_parents)
-    # print(result_max)
-    # cluster_max = kmeans.predict(np.asarray([result_max]).reshape(1, -1))[0]
-    # indices = []
-    # for i, element in enumerate(pred):
-    #     if element == cluster_max:
-    #         indices.append(i)
-    # for index in indices:
-    #     print(pairs_parents[index], results_parents[index])
-    #     # print(pairs[index])
-    #     outliers.append(pairs_parents[index])
-    #
-    #
-    # results_co_s = np.asarray(results_co).reshape(-1,1)
-    # kmeans = KMeans(n_clusters= 7, random_state = 0).fit(results_co_s)
-    # pred = kmeans.predict(results_co_s)
-    # print(results_co)
-    # result_max = max(results_co)
-    # print(result_max)
-    # cluster_max = kmeans.predict(np.asarray([result_max]).reshape(1, -1))[0]
-    # indices = []
-    # for i, element in enumerate(pred):
-    #     if element == cluster_max:
-    #         indices.append(i)
-    # for index in indices:
-    #     print(pairs_co[index], results_co[index])
-    #     # print(pairs[index])
-    #     outliers.append(pairs_co[index])
-
-
-
-
-
-    # outliers_u = [i for i, entry in enumerate(y_pred) if  entry == -1]
-    # for entry in outliers_u:
-    #     print(normalized_results[entry])
-    #     print(pairs[entry])
-    #     outliers.append(pairs[entry])
-
-
-
-    # for i,entry in enumerate(normalized_results):
-    #     if entry > threshold:
-    #         outliers.append(pairs[i])
-
-    # for entry, result in results.items():
-    #     normalized_result  = (result - min) / (max - min)
-    #     #print(normalized_result)
-    #     if  normalized_result > threshold:
-    #         outliers.append(entry)
-
-    print(outliers)
-        # if index_combined > threshold:
-        #
-        #     outliers.append((child, key))
-        #     #print(child, key, index_parent, index_child)
-        #     cleaned_co_hyponyms.remove(child)
-        #     if len(cleaned_co_hyponyms) < 1:
-        #         #print(str(sim) + '\n')
-        #         break
-        #
-        # print(outliers)
     return outliers
 
 
@@ -557,17 +582,6 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
         words = ["computer_science", "biology", "physics", "science", "virology", "life_science", "chemistry", "earth_science", "algebra", "economics", "optics" "immunology"]
         for word in words:
             print("Current word: ", word)
-            # element_distances = []
-            # for element in model.kv.vocab:
-            #     distance = model.kv.distance(word, element)
-            #     hierarchy_distance = model.kv.difference_in_hierarchy(word, element)
-            #     element_distances.append((element, distance, hierarchy_distance))
-            # distances_sorted = sorted(element_distances, key=operator.itemgetter(1))
-            # distances_parents_sorted = []
-            # for element in distances_sorted:
-            #     if element[2] < 0:
-            #         distances_parents_sorted.append(element[0])
-            # print(distances_parents_sorted)
 
             if word in model.kv.vocab:
                 print("Closest Parent: ", model.kv.closest_parent(word))
@@ -636,14 +650,14 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
         #     model.save("embeddings/embeddings_" + domain + "_crawl_poincare_" + str(entry_science) + "_" + str(dim))
         #     #model.save("embeddings/embeddings_science_crawl_merge_poincare_10_3_50_02")
         #     break
-        relations = './data/poincare_common_domains02.tsv'
+        relations = './data/poincare_common_domains.tsv'
         #relations = './data/science_crawl_merge_10_3_02.tsv'
         poincare_rel = PoincareRelations(relations)
         dim = 50
         model = PoincareModel(poincare_rel, size = dim)
         print("Starting Training...")
         model.train(epochs=400)
-        model.save("embeddings/poincare_common_domains02_5_3" + "_" + str(dim))
+        model.save("embeddings/poincare_common_domains_5_3" + "_" + str(dim))
 
     if mode == "train_word2vec":
         gold_s,relations_s = read_all_data("science")
@@ -708,7 +722,7 @@ def run(mode, domain, embedding, embedding_name, experiment_name = None, log = F
             #thresholds = [0.02, 0.05,0.08,0.1,0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] #normalized rank based evaluation
 
             #thresholds = [-0.05, -0.1, -0.2, -0.3, -0.5, -0.6, -0.7, -0.8] #standartized thresholds
-            thresholds = [1]
+            thresholds = range(2,42, 5)
             for value in thresholds:
                 gold, relations = read_all_data(domain)
                 outliers = calculate_outliers(relations, model, "abs", embedding_type = embedding, threshold = value, co_hypo_relevance = 25, model_poincare = model_poincare)
