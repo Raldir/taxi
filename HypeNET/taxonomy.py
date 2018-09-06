@@ -36,6 +36,7 @@ def load_paths_training(corpus_prefix, dataset_keys, lemma_index, path_based=Tru
     corpus = KnowledgeResource(corpus_prefix)
     print('Done!')
 
+    print("Generate paths...")
     keys = [(corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))) for (x, y) in dataset_keys]
     paths_x_to_y = [{vectorize_path(path, lemma_index, pos_index, dep_index, dir_index): count
                      for path, count in get_paths(corpus, x_id, y_id).iteritems()}
@@ -67,6 +68,7 @@ def load_paths_prediction(corpus, dataset_keys, lemma_index, pos_index, dep_inde
     :param dataset_keys:
     :return:
     """
+    print("Generate paths...")
     keys = [(corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))) for (x, y) in dataset_keys]
     paths_x_to_y = [{vectorize_path(path, lemma_index, pos_index, dep_index, dir_index): count
                      for path, count in get_paths(corpus, x_id, y_id).iteritems()}
@@ -245,19 +247,25 @@ def main():
     script_path = os.path.dirname(os.path.realpath(__file__)) + "/"
 
     parser = argparse.ArgumentParser(description='Run HypeNet for taxonomy generation.')
-    parser.add_argument('-c', '--corpus_path', required=True)
+    parser.add_argument('-c', '--corpus_path', required=True, help="Path the directory with the corpus files.")
     parser.add_argument('-cp', '--corpus_prefix', default="corpus",
-                        help="Prefix of the corpus file e.g. corpus for corpus_")
+                        help="Prefix of the corpus file e.g. corpus for corpus_... Default: corpus")
 
-    parser.add_argument('-m', '--model_path', default=script_path + 'model/')
-    parser.add_argument('-mp', '--model_prefix', default='wiki_model')
+    parser.add_argument('-m', '--model_path', default=script_path + 'model/',
+                        help="Path the directory with the model files. Default: %s." % script_path + 'model/')
 
-    parser.add_argument('--path_based', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"))
+    parser.add_argument('-mp', '--model_prefix', default='wiki_model',
+                        help="Prefix of the model files. Default: wiki_model")
 
-    parser.add_argument('--seed', default=int(random.getrandbits(32)))
-    parser.add_argument('--dynet-gpus', default=1)
-    parser.add_argument('--dynet-mem', default=4096)
-    parser.add_argument('--dynet-seed', default=int(random.getrandbits(32)))
+    parser.add_argument('--path_based', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"),
+                        help="Path based analyses. Default: true")
+
+    parser.add_argument('--seed', default=int(random.getrandbits(32)),
+                        help="Seed for the numpy randomizer. Default: random integer value")
+    parser.add_argument('--dynet-gpus', default=1, help="Dynet gpus. Default: 1")
+    parser.add_argument('--dynet-mem', default=4096, help="Dynet memory. Default: 4096")
+    parser.add_argument('--dynet-seed', default=int(random.getrandbits(32)),
+                        help="Seed for the dynet randomizer. Default: random integer value")
 
     subparser = parser.add_subparsers(dest="mode", help='Mode')
 
@@ -299,7 +307,12 @@ def main():
         # Just ignore
         pass
 
+    args.corpus_path = args.corpus_path + ("" if args.corpus_path.endswith("/") else "/")
+    args.model_path = args.model_path + ("" if args.model_path.endswith("/") else "/")
+
     if args.mode == "training":
+        args.dataset_path = args.dataset_path + ("" if args.dataset_path.endswith("/") else "/")
+
         training(args)
     elif args.mode == "prediction":
         prediction(args)
