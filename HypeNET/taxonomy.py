@@ -14,7 +14,7 @@ from train.paths_lstm_classifier import PathLSTMClassifier
 EMBEDDINGS_DIM = 50
 
 
-def load_paths_training(corpus_prefix, dataset_keys, lemma_index):
+def load_paths_training(corpus_prefix, dataset_keys, lemma_index, path_based=True):
     """
     Override load_paths from lstm_common to include (x, y) vectors
     :param corpus_prefix:
@@ -32,9 +32,9 @@ def load_paths_training(corpus_prefix, dataset_keys, lemma_index):
     dummy = dir_index['#UNKNOWN#']
 
     # Load the resource (processed corpus)
-    print 'Loading the corpus...'
+    print("Loading the corpus '%s'..." % os.path.abspath(corpus_prefix))
     corpus = KnowledgeResource(corpus_prefix)
-    print 'Done!'
+    print('Done!')
 
     keys = [(corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))) for (x, y) in dataset_keys]
     paths_x_to_y = [{vectorize_path(path, lemma_index, pos_index, dep_index, dir_index): count
@@ -45,10 +45,12 @@ def load_paths_training(corpus_prefix, dataset_keys, lemma_index):
     paths = paths_x_to_y
 
     empty = [dataset_keys[i] for i, path_list in enumerate(paths) if len(path_list.keys()) == 0]
-    print 'Pairs without paths:', len(empty), ', all dataset:', len(dataset_keys)
+    print("Pairs without paths: %s, all dataset: %s" % (len(empty), len(dataset_keys)))
 
     # Get the word embeddings for x and y (get a lemma index)
-    x_y_vectors = [(lemma_index.get(x, 0), lemma_index.get(y, 0)) for (x, y) in dataset_keys]
+    x_y_vectors = None \
+        if path_based \
+        else [(lemma_index.get(x, 0), lemma_index.get(y, 0)) for (x, y) in dataset_keys]
 
     pos_inverted_index = {i: p for p, i in pos_index.iteritems()}
     dep_inverted_index = {i: p for p, i in dep_index.iteritems()}
@@ -58,7 +60,7 @@ def load_paths_training(corpus_prefix, dataset_keys, lemma_index):
            pos_inverted_index, dep_inverted_index, dir_inverted_index
 
 
-def load_paths_prediction(corpus, dataset_keys, lemma_index, pos_index, dep_index, dir_index):
+def load_paths_prediction(corpus, dataset_keys, lemma_index, pos_index, dep_index, dir_index, path_based=True):
     """
     Override load_paths from lstm_common to include (x, y) vectors
     :param corpus:
@@ -72,26 +74,23 @@ def load_paths_prediction(corpus, dataset_keys, lemma_index, pos_index, dep_inde
     paths_x_to_y = [{p: c for p, c in paths_x_to_y[i].iteritems() if p is not None} for i in range(len(keys))]
 
     empty = [dataset_keys[i] for i, path_list in enumerate(paths_x_to_y) if len(path_list.keys()) == 0]
-    print 'Pairs without paths:', len(empty), ', all dataset:', len(dataset_keys)
+    print("Pairs without paths: %s, all dataset: %s" % (len(empty), len(dataset_keys)))
 
     # Get the word embeddings for x and y (get a lemma index)
-    x_y_vectors = [(lemma_index.get(x, 0), lemma_index.get(y, 0)) for (x, y) in dataset_keys]
+    x_y_vectors = None \
+        if path_based \
+        else [(lemma_index.get(x, 0), lemma_index.get(y, 0)) for (x, y) in dataset_keys]
 
     return x_y_vectors, paths_x_to_y
 
 
 def training(args):
     print("Start training...")
-    corpus_prefix = args.corpus_prefix
-    dataset_prefix = args.dataset_prefix
-    embeddings_file = args.embeddings_file
-    alpha = args.alpha
-    word_dropout_rate = args.word_dropout_rate
 
     print('Loading the dataset...')
-    train_set = load_dataset(dataset_prefix + 'train.tsv')
-    test_set = load_dataset(dataset_prefix + 'test.tsv')
-    val_set = load_dataset(dataset_prefix + 'val.tsv')
+    train_set = load_dataset(args.dataset_path + 'train.tsv')
+    test_set = load_dataset(args.dataset_path + 'test.tsv')
+    val_set = load_dataset(args.dataset_path + 'val.tsv')
     y_train = [1 if 'True' in train_set[key] else 0 for key in train_set.keys()]
     y_test = [1 if 'True' in test_set[key] else 0 for key in test_set.keys()]
     # Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
@@ -99,14 +98,20 @@ def training(args):
     dataset_keys = train_set.keys() + test_set.keys() + val_set.keys()
     print('Done loading dataset')
 
-    print('Initializing word embeddings...')
-    wv, lemma_index = load_embeddings(embeddings_file)
+    print("Initializing word embeddings with file '%s'..." % os.path.abspath(args.embeddings_file))
+    wv, lemma_index = load_embeddings(args.embeddings_file)
     print('Finished loading word embeddings.')
 
-    print('Load the paths and create the feature vectors...')
-    x_y_vectors, dataset_instances, pos_index, dep_index, dir_index, \
-    pos_inverted_index, dep_inverted_index, dir_inverted_index = load_paths_training(corpus_prefix, dataset_keys,
-                                                                                     lemma_index)
+    print("Load corpus from '%s' with prefix '%s', paths and create the feature vectors..." % (
+        os.path.abspath(args.corpus_path), args.corpus_prefix))
+
+    x_y_vectors, dataset_instances, pos_index, dep_index, dir_index, pos_inverted_index, dep_inverted_index, dir_inverted_index = \
+        load_paths_training(
+            args.corpus_path + args.corpus_prefix,
+            dataset_keys,
+            lemma_index,
+            args.path_based
+        )
     print('Done loading paths:')
     print('   Number of lemmas: %d' % len(lemma_index))
     print('   Number of pos tags: %d' % len(pos_index))
@@ -118,8 +123,8 @@ def training(args):
     # Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
     # X_val = dataset_instances[len(train_set)+len(test_set):]
 
-    x_y_vectors_train = x_y_vectors[:len(train_set)]
-    x_y_vectors_test = x_y_vectors[len(train_set):len(train_set) + len(test_set)]
+    x_y_vectors_train = None if x_y_vectors is None else x_y_vectors[:len(train_set)]
+    x_y_vectors_test = None if x_y_vectors is None else x_y_vectors[len(train_set):len(train_set) + len(test_set)]
     # Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
     # x_y_vectors_val = x_y_vectors[len(train_set)+len(test_set):]
 
@@ -131,12 +136,12 @@ def training(args):
                                     n_epochs=args.epochs,
                                     num_relations=2,
                                     lemma_embeddings=wv,
-                                    dropout=word_dropout_rate,
-                                    alpha=alpha,
-                                    use_xy_embeddings=True)
+                                    dropout=args.word_dropout_rate,
+                                    alpha=args.alpha,
+                                    use_xy_embeddings=x_y_vectors is not None)
     print('Classifier created.')
 
-    print('Training with learning rate = %f, dropout = %f...' % (alpha, word_dropout_rate))
+    print('Training with learning rate = %f, dropout = %f...' % (args.alpha, args.word_dropout_rate))
     classifier.fit(X_train, y_train, x_y_vectors=x_y_vectors_train)
     print('Classifier finished training.')
 
@@ -148,8 +153,8 @@ def training(args):
 
     print("Training finished.")
 
-    print("Save model...")
-    classifier.save_model(args.model, [lemma_index, pos_index, dep_index, dir_index])
+    print("Save model to '%s' with prefix '%s'..." % (os.path.abspath(args.model_path), args.model_prefix))
+    classifier.save_model(args.model_path + args.model_prefix, [lemma_index, pos_index, dep_index, dir_index])
     print("Model saved.")
 
     print("Training task finished.")
@@ -158,32 +163,41 @@ def training(args):
 def prediction(args):
     print("Started prediction.")
 
-    print('Loading the dataset...')
+    print("Loading the dataset from file '%s'..." % args.hype_file)
     test_set = {}
+    test_set_mapping = []
     with open(args.hype_file, "r") as f:
         reader = csv.reader(f, delimiter=args.csv_delimiter)
 
         for i, line in enumerate(reader):
             # CSV-reader does not have an option to skip a header line...
             if not args.csv_has_header or i > 0:
-                key = line[args.tuple_start_index:args.tuple_start_index + 2]
-                data = line[0:args.tuple_start_index] + line[args.tuple_start_index + 2:]
+                key = line[args.csv_tuple_start_index:args.csv_tuple_start_index + 2]
 
-                test_set[tuple(key)] = data
+                test_set[tuple(key)] = line
+                test_set_mapping.append(tuple(key))
 
     print('Dataset loaded.')
 
-    print("Load model...")
-    classifier, lemma_index, pos_index, dep_index, dir_index = load_model(args.model)
+    print("Load model from '%s' with prefix '%s'..." % (os.path.abspath(args.model_path), args.model_prefix))
+    classifier, lemma_index, pos_index, dep_index, dir_index = load_model(args.model_path + args.model_prefix)
     print("Model loaded.")
 
-    print('Loading the corpus...')
-    corpus = KnowledgeResource(args.corpus_prefix)
+    print("Load corpus from '%s' with prefix '%s'..." % (os.path.abspath(args.corpus_path), args.corpus_prefix))
+    corpus = KnowledgeResource(args.corpus_path + args.corpus_prefix)
     print('Corpus loaded.')
 
     print('Load the paths and create the feature vectors...')
-    x_y_vectors_test, X_test = load_paths_prediction(corpus, test_set.keys(), lemma_index, pos_index, dep_index,
-                                                     dir_index)
+    x_y_vectors_test, X_test = load_paths_prediction(
+        corpus,
+        test_set.keys(),
+        lemma_index,
+        pos_index,
+        dep_index,
+        dir_index,
+        args.path_based
+    )
+
     print('Done loading paths:')
     print('   Number of lemmas: %d' % len(lemma_index))
     print('   Number of pos tags: %d' % len(pos_index))
@@ -197,34 +211,26 @@ def prediction(args):
     print("Write result to: %s" % os.path.abspath(args.output_file))
     empty_relations = 0
 
-    # Copy index as key and not word -> for faster searching the corresponding word of an id
-    index_lemma = {}
-
-    for key in lemma_index:
-        index_lemma[lemma_index[key]] = key
-
     with open(args.output_file, "w+") as f:
         writer = csv.writer(f, delimiter=args.csv_delimiter)
 
         for i, p in enumerate(pred):
-            hypo = None if p[0] == 0 else index_lemma[p[0]]
-            hyper = None if p[1] == 0 else index_lemma[p[1]]
+            hyper_hypo = test_set_mapping[i]
 
-            if hypo is None and hyper is not None:
-                print("Unknown hyponym but known hypernym '%s' in line %s." % (hyper, i))
+            if p[0] == 0 or p[1] == 0:
+                print("Unknown hyponym '%s' but known hypernym '%s' in line %s." % (hyper_hypo[0], hyper_hypo[1], i))
                 empty_relations += 1
-            elif hypo is not None and hyper is None:
-                print("Known hyponym '%s' but unknown hypernym in line %s." % (hypo, i))
+            elif p[0] != 1 and p[1] == 0:
+                print("Known hyponym '%s' but unknown hypernym '%s' in line %s." % (hyper_hypo[0], hyper_hypo[1], i))
                 empty_relations += 1
-            elif hypo is None and hyper is None:
-                print("Unknown hyponym and unknown hypernym in line %s." % i)
+            elif p[0] == 0 and p[1] == 0:
+                print("Unknown hyponym '%s' and unknown hypernym '%s' in line %s." % (hyper_hypo[0], hyper_hypo[1], i))
                 empty_relations += 1
             else:
                 predicted = p[2]
                 prediction_score = p[3]
-                previous_data = test_set[(hypo, hyper)]
 
-                writer.writerow([i, hypo, hyper] + previous_data + [predicted, prediction_score])
+                writer.writerow(test_set[hyper_hypo] + [predicted, prediction_score])
 
     if empty_relations > 0:
         print("Failed to write %s results due unknown words." % empty_relations)
@@ -239,11 +245,16 @@ def main():
     script_path = os.path.dirname(os.path.realpath(__file__)) + "/"
 
     parser = argparse.ArgumentParser(description='Run HypeNet for taxonomy generation.')
-    parser.add_argument('-m', '--model', default=script_path + 'model/wiki_model')
-    parser.add_argument('-c', '--corpus_prefix', default=script_path + 'corpus/corpus/wiki')
-    parser.add_argument('--path_based', default=True)
+    parser.add_argument('-c', '--corpus_path', required=True)
+    parser.add_argument('-cp', '--corpus_prefix', default="corpus",
+                        help="Prefix of the corpus file e.g. corpus for corpus_")
+
+    parser.add_argument('-m', '--model_path', default=script_path + 'model/')
+    parser.add_argument('-mp', '--model_prefix', default='wiki_model')
+
+    parser.add_argument('--path_based', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"))
+
     parser.add_argument('--seed', default=int(random.getrandbits(32)))
-    parser.add_argument('--evaluate', default=True, help='Calculate precision, recall and F1.')
     parser.add_argument('--dynet-gpus', default=1)
     parser.add_argument('--dynet-mem', default=4096)
     parser.add_argument('--dynet-seed', default=int(random.getrandbits(32)))
@@ -251,18 +262,20 @@ def main():
     subparser = parser.add_subparsers(dest="mode", help='Mode')
 
     tp = subparser.add_parser("training", help="Train a model with a dataset.")
-    tp.add_argument('-d', '--dataset_prefix', default=script_path + 'dataset/datasets/dataset_rnd/')
+    tp.add_argument('-d', '--dataset_path', default=script_path + 'dataset/datasets/dataset_rnd/')
     tp.add_argument('-e', '--embeddings_file', default=script_path + 'embedding/glove.6B.50d.txt')
     tp.add_argument('--epochs', default=3)
     tp.add_argument('--alpha', default=0.001)
     tp.add_argument('--word_dropout_rate', default=0.5)
+    tp.add_argument('--evaluate', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"),
+                    help='Calculate precision, recall and F1.')
 
     pp = subparser.add_parser("prediction", help="Use a trained model and predict hypernyms.")
-    pp.add_argument('-i', '--hype_file', help="CSV-file containing hypo/hyper-relations.")
+    pp.add_argument('-i', '--hype_file', required=True, help="CSV-file containing hypo/hyper-relations.")
     pp.add_argument('-o', '--output_file', default=script_path + 'result.csv')
     pp.add_argument('--csv_delimiter', default='\t')
-    pp.add_argument('--csv_has_header', default=False)
-    pp.add_argument('--tuple_start_index', default=0, type=int,
+    pp.add_argument('--csv_has_header', default=False, type=lambda x: x.lower() in ("yes", "true", "t", "1"))
+    pp.add_argument('--csv_tuple_start_index', default=0, type=int,
                     help="Sets the start index of hypo/hyper-relations in CSV-files (e.g. first column is an ID)")
 
     args = parser.parse_args()
@@ -279,6 +292,12 @@ def main():
     sys.argv.insert(6, str(args.dynet_seed))
 
     np.random.seed(args.seed)
+
+    try:
+        os.mkdir(args.model_path)
+    except:
+        # Just ignore
+        pass
 
     if args.mode == "training":
         training(args)
