@@ -211,7 +211,7 @@ def prediction(args):
     print('Prediction finished.')
 
     print("Write result to: %s" % os.path.abspath(args.output_file))
-    empty_relations = 0
+    already_printed = set([])
 
     with open(args.output_file, "w+") as f:
         writer = csv.writer(f, delimiter=args.csv_delimiter)
@@ -219,23 +219,18 @@ def prediction(args):
         for i, p in enumerate(pred):
             hyper_hypo = test_set_mapping[i]
 
-            if p[0] == 0 or p[1] == 0:
-                print("Unknown hyponym '%s' but known hypernym '%s' in line %s." % (hyper_hypo[0], hyper_hypo[1], i))
-                empty_relations += 1
-            elif p[0] != 1 and p[1] == 0:
-                print("Known hyponym '%s' but unknown hypernym '%s' in line %s." % (hyper_hypo[0], hyper_hypo[1], i))
-                empty_relations += 1
-            elif p[0] == 0 and p[1] == 0:
-                print("Unknown hyponym '%s' and unknown hypernym '%s' in line %s." % (hyper_hypo[0], hyper_hypo[1], i))
-                empty_relations += 1
-            else:
-                predicted = p[2]
-                prediction_score = p[3]
+            if hyper_hypo[0] not in already_printed and corpus.get_id_by_term(hyper_hypo[0]) == -1:
+                print("Unknown hyponym in line %s: %s" % (i, hyper_hypo[0]))
+                already_printed.add(hyper_hypo[0])
 
-                writer.writerow(test_set[hyper_hypo] + [predicted, prediction_score])
+            if hyper_hypo[1] not in already_printed and corpus.get_id_by_term(hyper_hypo[1]) == -1:
+                print("Unknown hypernym in line %s: %s" % (i, hyper_hypo[1]))
+                already_printed.add(hyper_hypo[1])
 
-    if empty_relations > 0:
-        print("Failed to write %s results due unknown words." % empty_relations)
+            predicted = p[0]
+            prediction_score = p[1]
+
+            writer.writerow(test_set[hyper_hypo] + [predicted, prediction_score])
 
     print("Finished writing result.")
 
