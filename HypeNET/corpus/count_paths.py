@@ -47,7 +47,7 @@ def main():
 
     print("Write paths to file: %s" % out_path_filename)
     print("Write frequent paths (occured >= %s) to file: %s" % (frequent_path_count, out_frequent_path_filename))
-    print("Found %s paths." % len(paths))
+    frequent_path_wrote = 0
 
     with codecs.open(out_path_filename, 'w', 'utf-8') as out_path_file:
         with codecs.open(out_frequent_path_filename, 'w', 'utf-8') as out_frequent_path_file:
@@ -59,7 +59,10 @@ def main():
 
                 if frequency >= frequent_path_count:
                     out_frequent_path_file.write("%s\n" % path)
+                    frequent_path_wrote += 1
 
+    print("Wrote %s paths." % len(paths))
+    print("Wrote %s frequent paths." % frequent_path_wrote)
 
 if __name__ == '__main__':
     main()
