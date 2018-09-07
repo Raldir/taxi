@@ -115,15 +115,13 @@ class PathLSTMClassifier(BaseEstimator):
                 val = np.argmax(npval)
 
                 if full_information:
-                    vals.append(x_y_vector + (val, npval[val]))
+                    vals.append((val, npval[val]))
                 else:
                     vals.append(val)
 
             test_pred.extend(vals)
 
         return test_pred
-
-
 
     def get_top_k_paths(self, all_paths, k=None, threshold=None):
         """

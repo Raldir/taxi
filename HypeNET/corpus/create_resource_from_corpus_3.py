@@ -35,21 +35,23 @@ def main():
 
     l2r_db = bsddb.btopen(resource_prefix + '_l2r.db', 'c')
 
-    with codecs.open(id_triplet_file) as f_in:
+    with codecs.open(id_triplet_file, 'r', 'utf-8') as f_in:
         for line in f_in:
             try:
                 x, y, path, count = line.strip().split('\t')
-            except:
-                print line
+                x, y, path = unicode(x).encode('utf-8'), unicode(y).encode('utf-8'), unicode(path).encode('utf-8')
+
+                key = str(x) + '###' + str(y)
+                current = '%s:%s' % (path, count)
+
+                if key in l2r_db:
+                    current = l2r_db[key] + ',' + current
+
+                l2r_db[key] = current
+            except Exception as e:
+	        print("ERROR: %s" % e)
+                print("Line: %s" % line)
                 continue
-
-            key = str(x) + '###' + str(y)
-            current = '%s:%s' % (path, count)
-
-            if key in l2r_db:
-                current = l2r_db[key] + ',' + current
-
-            l2r_db[key] = current
 
     l2r_db.sync()
 
