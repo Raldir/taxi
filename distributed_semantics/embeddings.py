@@ -9,6 +9,179 @@ from scipy import spatial
 import sense2vec
 
 
+###################################OLD, DEPRICATED METHODS #####################################################
+
+def calculate_outliers(relations_o, model, mode, embedding_type = None, threshhold = None):
+    relations = relations_o.copy()
+    structure = {}
+    outliers = []
+    for i in range(len(relations)):
+        relations[i] = (relations[i][0], relations[i][1].replace(" ", compound_operator), relations[i][2].replace(" ", compound_operator))
+
+    for parent in [relation[2] for relation in relations]:
+        structure[parent] = [relation[1] for relation in relations if relation[2] == parent]
+
+    for key in structure:
+        data_base_word_name = key
+        if structure[key] == []:
+            print("no children: " + key)
+            continue
+        # if not key in model.wv and key.title() in model.wv:
+        #     print "Uppercase in Model: " + key.title()
+        #     data_base_word_name = key.title()
+        elif not key in model.wv:
+            continue
+        cleaned_co_hyponyms = []
+        for word in structure[key]:
+            if word in model.wv:
+                cleaned_co_hyponyms.append(word)
+        if len(cleaned_co_hyponyms) < 1:
+            continue
+        #print(cleaned_co_hyponyms)
+        above_treshhold = False
+        while not above_treshhold:
+            outlier = model.wv.doesnt_match(cleaned_co_hyponyms)
+            sim = model.wv.similarity(data_base_word_name, outlier)
+            #print(key + " " + outlier)
+            if threshhold == None:
+                if embedding_type == "0":
+                    threshhold = 0.35#0.51
+                elif embedding_type == "1":
+                    threshhold = 0.6 #0.20
+                else:
+                    threshhold = 0.5
+
+            #
+            threshhold_bool = False
+            if mode == "k_nearest":
+                threshhold_bool = model.wv.rank(key, outlier) > threshhold and model.wv.rank(outlier, key) > threshhold
+            if mode == "abs":
+                threshhold_bool = sim < threshhold
+            if threshhold_bool:
+                outliers.append((outlier, key))
+                cleaned_co_hyponyms.remove(outlier)
+                if len(cleaned_co_hyponyms) < 1:
+                    #print(str(sim) + '\n')
+                    break
+            else:
+                above_treshhold = True
+            #print(str(sim) + '\n')
+    print(outliers)
+    return outliers
+
+
+
+
+def compare_to_gold(gold, taxonomy_o, outliers, model, mode = "removal", log = False, write_file = None):
+    taxonomy = taxonomy_o.copy()
+    global compound_operator
+    removed_outliers = []
+    for element in taxonomy:
+        if (element[1].replace(' ', compound_operator), element[2].replace(' ', compound_operator)) in outliers:
+            #print("skip: " + element[1] + " " + element[2])
+            if mode == "removal_add":
+                best_word, parent, rank, rank_inv, rank_root = connect_to_taxonomy(taxonomy.copy(),element[1].replace(' ', compound_operator), model)
+                if rank != None and rank_inv != None:
+                    rank_ref =  rank + rank_inv
+                    if  not rank_ref > 150:
+                        if rank_root != None and rank_root in range(rank_ref -20, rank_ref + 20):
+                        #and rank_root in range(rank_ref -20, rank_ref + 20):
+                            removed_outliers.append((element[0], element[1], parent.replace(compound_operator, ' ')))
+                            print("Added :" + str(element[0]) + " " + element[1] + " " +  parent.replace(compound_operator, ' '))
+                            print("Best Word: " + best_word + ", Rank:" + str(rank) + " Rank_Inv: " + str(rank_inv) + ", Rank Parent: " + str(rank_root))
+
+                # elif rank_root == "None":
+                #     removed_outliers.append(element)
+            continue
+        removed_outliers.append(element)
+
+    correct = 0
+    for element in removed_outliers:
+        for ele_g in gold:
+            if element[1] == ele_g[1] and element[2] == ele_g[2]:
+                correct+=1
+                break
+    precision = correct / float(len(removed_outliers))
+    recall = correct / float(len(gold))
+    print(float(len(removed_outliers)))
+    print(float(len(gold)))
+    print("Correct: " + str(correct))
+    print("Precision: " + str(precision))
+    print("Recall: " + str(recall))
+    print("F1: " + str(2*precision *recall / (precision + recall)))
+    if log != None:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), log)
+        with open(path + ".txt", 'w') as f:
+            for element in outliers:
+                f.write(element[0] + '\t' + element[1] + '\n')
+            f.write("Elements Taxonomy:" + str(float(len(removed_outliers))))
+            f.write(str((float(len(gold)))) + '\n')
+            f.write("Correct: " + str(correct) + '\n')
+            f.write("Precision: " + str(precision) + '\n')
+            f.write("Recall: " + str(recall) + '\n')
+            f.write("F1: " + str(2*precision *recall / (precision + recall)) + '\n')
+            f.close()
+    if write_file != None:
+        path =  os.path.join(os.path.dirname(os.path.abspath(__file__)), write_file + ".csv")
+        with open(path, 'w') as f:
+            for element in removed_outliers:
+                f.write(element[0] + '\t' + element[1] + '\t' + element[2]  + '\n')
+        f.close()
+
+    return removed_outliers
+
+
+def get_parent(relations,child):
+    for relation in relations:
+        if child == relation[1]:
+            return relation[2]
+    return None
+
+def get_rank(entity1, entity2, model, threshhold):
+    rank_inv = None
+    similarities_rev = model.wv.similar_by_word(entity1, threshhold)
+    similarities_rev = [entry[0] for entry in similarities_rev]
+    for j in range(len(similarities_rev)):
+        temp_rev = similarities_rev[j]
+        if entity2 == temp_rev:
+            rank_inv = j
+    return rank_inv
+
+def connect_to_taxonomy(relations_o, current_word, model):
+    relations = relations_o.copy()
+    global compound_operator
+    for i in range(len(relations)):
+        relations[i] = (relations[i][0], relations[i][1].replace(" ", compound_operator), relations[i][2].replace(" ", compound_operator))
+    words_o = [relation[2] for relation in relations] + [relation[1] for relation in relations]
+    words_a = [relation[2] for relation in relations if relation[2] in model.wv] + [relation[1] for relation in relations if relation[1] in model.wv]
+    #print("Original" + str(len(words_o)) + "Remaining: " + str(len(words_a)))
+    words_a = list(set(words_a))
+    best_word = None
+    #print(current_word)
+    if not current_word in model.wv:
+        print("outlier word not found in voc")
+        return
+    words_a.remove(current_word)
+    element = model.wv.most_similar_to_given(current_word, words_a)
+    while get_parent(relations, element) == current_word:
+        words_a.remove(element)
+        element = model.wv.most_similar_to_given(current_word, words_a)
+    #print(current_word + " " + element)
+    #curr_rank = model.wv.closer_than(current_word, element)
+    rank = get_rank(current_word, element, model, 100000)
+    if rank != None:
+        best_word = element
+    rank_inv = get_rank(element, current_word, model, 100000)
+    parent =  get_parent(relations, element)
+    rank_root = get_rank(current_word, parent , model, 100000)
+
+    #print("Rank :" + str(rank) + ", Rank_Iverse:"+ str(rank_inv) +  ", Rank root: " + str(rank_root) + ", highest similarity: " + best_word + " " + current_word + ", parent: " +  parent)
+    return [best_word, parent, rank, rank_inv, rank_root]
+
+
+
+
+##############################################EVEN OLDER STUFF #############################################################
 def read_embeddings(embedding_path):
     embeddings = {}
 
