@@ -196,36 +196,6 @@ def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold, no_paren
 
     return new_relationships
 
-
-
-
-def visualize_taxonomy(taxonomy_vectors, taxonomy_names, name):
-    tsne = TSNE(n_components=2, random_state=0)
-    np.set_printoptions(suppress=True)
-    Y = tsne.fit_transform(taxonomy_vectors)
-    #plt.figure(figsize=(7,7))
-    plt.scatter(Y[:, 0], Y[:, 1])
-    for label, x, y in zip(taxonomy_names, Y[:, 0], Y[:, 1]):
-        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords='offset points', fontsize = 1)
-    plt.show()
-    plt.savefig(os.path.join("vis", name), dpi = 2000)
-
-def get_parent_distances(word, model_poincare):
-    element_distances = []
-    if word not in model_poincare.kv.vocab:
-        return None
-    for element in model_poincare.kv.vocab:
-        distance = model_poincare.kv.distance(word, element)
-        hierarchy_distance = model_poincare.kv.difference_in_hierarchy(word, element)
-        element_distances.append((element, distance, hierarchy_distance))
-    distances_sorted = sorted(element_distances, key=operator.itemgetter(1))
-    distances_parents_sorted = []
-    for element in distances_sorted:
-        if element[2] < 0:
-            distances_parents_sorted.append((element[0], element[1]))
-    return distances_parents_sorted
-
-
 def get_rank(current_child, parent, children, model, model_poincare, no_parents, no_co, compound  = True,  wordnet = False):
     result_co = 0
     pair_co  = 0

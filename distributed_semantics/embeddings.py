@@ -11,6 +11,22 @@ import sense2vec
 
 ###################################OLD, DEPRICATED METHODS #####################################################
 
+def get_parent_distances(word, model_poincare):
+    element_distances = []
+    if word not in model_poincare.kv.vocab:
+        return None
+    for element in model_poincare.kv.vocab:
+        distance = model_poincare.kv.distance(word, element)
+        hierarchy_distance = model_poincare.kv.difference_in_hierarchy(word, element)
+        element_distances.append((element, distance, hierarchy_distance))
+    distances_sorted = sorted(element_distances, key=operator.itemgetter(1))
+    distances_parents_sorted = []
+    for element in distances_sorted:
+        if element[2] < 0:
+            distances_parents_sorted.append((element[0], element[1]))
+    return distances_parents_sorted
+    
+
 def calculate_outliers(relations_o, model, mode, embedding_type = None, threshhold = None):
     relations = relations_o.copy()
     structure = {}
