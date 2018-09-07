@@ -14,15 +14,14 @@ def main():
     args = docopt("""Counts the paths the Wikipedia dump and create a triplets file, each line is formatted as follows: X\t\Y\tpath
 
     Usage:
-        count_paths.py <parsed_wikipedia_file> <out_path_file> <out_frequent_path_file> <frequent_path_count> 
+        count_paths.py <parsed_wiki_path_file> <out_path_file> <out_frequent_path_file> <frequent_path_count> 
 
-        <parsed_wikipedia_file> = the parsed wikipedia dump file
+        <parsed_wiki_path_file> = the parsed wikipedia dump file
         <out_path_file> = Output paths file
         <out_frequent_path_file> = Output frequent paths file
         <frequent_path_count>  = If a paths occured equal or higher to this number it will be a frequent paths
     """)
-
-    in_file = args['<parsed_wikipedia_file>']
+    in_file = args['<parsed_wiki_path_file>']
     out_path_filename = args['<out_path_file>']
     out_frequent_path_filename = args['<out_frequent_path_file>']
     frequent_path_count = int(args['<frequent_path_count>'])
@@ -30,18 +29,24 @@ def main():
     paths = {}
 
     print("Start reading from file: %s" % in_file)
+    line_count = 0
 
     with codecs.open(in_file, 'r', 'utf-8') as csvfile:
         # Example row:
-        # institute	titles	X/PROPN/nsubj>_publish/VERB/ROOT_<Y/NOUN/dobj
+        # X/PROPN/nsubj>_publish/VERB/ROOT_<Y/NOUN/dobj 123
         for line in csvfile:
             row = line.split(DELIMITER)
-            path = row[2]
+            path = row[0]
+            frequency = int(row[1])
 
             if path not in paths:
                 paths[path] = 0
 
-            paths[path] += 1
+            paths[path] += frequency
+            line_count += 1
+
+            if line_count % 10000 == 0:
+                print("   Read %s lines." % line_count)
 
     print("Finished reading.")
 

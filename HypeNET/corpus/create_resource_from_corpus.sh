@@ -45,7 +45,11 @@ echo "Create paths for parsed files."
 #( awk -v OFS='\t' '{i[$3]++} END{for(x in i){print x, i[x]}}' "$directory/$(echo $wiki_dump_file)_"$x"_parsed" > $directory/paths"_"$x ) &
 #done
 #wait
-python count_paths.py $directory/$triplet_file $directory/paths $directory/frequent_paths $frequent_path_count
+cat $directory/$wiki_dump_file"_"*"_parsed_paths" > $directory/paths_temp
+
+echo "Number of paths to sum: " $(wc -l $directory/paths_temp)
+
+python count_paths.py $directory/paths_temp $directory/paths $directory/frequent_paths $frequent_path_count
 echo "Paths for parsed files created."
 
 #echo "Concat paths..."
@@ -89,10 +93,17 @@ echo "Concat temporary id-triplet files..."
 cat $directory/id_triplet_file_* > $directory/id_triplet_file_temp;
 
 echo "Compute id-triplet files..."
-for x in {0..4}
-do
-( gawk -F $'\t' '{ if($1%5==$x) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_$x ) &
-done
+#for x in {0..4}
+#do
+#( gawk -F $'\t' '{ if($1%5==$x) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_$x ) &
+#done
+
+echo "Compute id-triplet files..."
+( gawk -v OFS='\t' '{ if($1%5==0) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_0 ) &
+( gawk -v OFS='\t' '{ if($1%5==1) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_1 ) &
+( gawk -v OFS='\t' '{ if($1%5==2) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_2 ) &
+( gawk -v OFS='\t' '{ if($1%5==3) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_3 ) &
+( gawk -v OFS='\t' '{ if($1%5==4) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_4 ) &
 wait
 
 echo "Concat id-triplet files..."
