@@ -119,13 +119,17 @@ def create_relation_files(relations_all, output_file_name, min_freq):
                         print("Found contradicting entry: ", entry2)
                         if j == len(output_freqs) - 1:
                             other_out.remove(entry2)
+                            print("Removed entry from commoncrawl")
                         else:
                             diff_freq = output_freqs[i][entry1] - output_freqs[j][entry2]
                             if diff_freq >= min_freq:
+                                print("Freq_diff:", diff_freq, "therefore remove from other rel")
                                 other_out.remove(entry2)
                             elif abs(diff_freq) >= min_freq:
+                                print("freq_diff:", diff_freq, "therefore remove from current rel")
                                 output_rels.remove(entry1)
                             else:
+                                print("freq_diff:", diff_freq, "therefore remove both entries")
                                 output_rels.remove(entry1)
                                 other_out.remove(entry2)
 
@@ -148,7 +152,7 @@ def process_rel_file(min_freq, input_file, vocabulary):
             #remove reflexiv and noise relations
             hyponym = adjust_input(line[0], vocabulary)
             hypernym = adjust_input(line[1], vocabulary)
-            valid = int(freq) >= min_freq  and line[0] != line[1] and len(line[0]) > 3 and len(line[1]) > 3 and (line[1] in vocabulary or line[2] in vocabulary)
+            valid = int(freq) >= min_freq  and line[0] != line[1] and len(line[0]) > 3 and len(line[1]) > 3 and (line[0] in vocabulary or line[1] in vocabulary)
             if valid:
                 vocabulary.add(hyponym)
                 vocabulary.add(hypernym)
