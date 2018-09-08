@@ -38,8 +38,7 @@ def main():
     with codecs.open(id_triplet_file, 'r', 'utf-8') as f_in:
         for line in f_in:
             try:
-                x, y, path, count = line.strip().split('\t')
-                x, y, path = unicode(x).encode('utf-8'), unicode(y).encode('utf-8'), unicode(path).encode('utf-8')
+                x, y, path, count = unicode(line).encode('utf-8').strip().split('\t')
 
                 key = str(x) + '###' + str(y)
                 current = '%s:%s' % (path, count)
