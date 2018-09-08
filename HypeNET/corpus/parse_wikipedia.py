@@ -25,24 +25,34 @@ def main():
     in_file = args['<in_file>']
     out_file = args['<out_file>']
 
+    wrote_paths = 0
+
     with codecs.open(in_file, 'r', 'utf-8') as f_in:
         with codecs.open(out_file, 'w', 'utf-8') as f_out:
+            with codecs.open(out_file + "_paths", 'w', 'utf-8') as f_path_out:
 
-            # Read the next paragraph
-            for paragraph in f_in:
+                # Read the next paragraph
+                for paragraph in f_in:
 
-                # Skip empty lines
-                paragraph = paragraph.replace("'''", '').strip()
-                if len(paragraph) == 0:
-                    continue
+                    # Skip empty lines
+                    paragraph = paragraph.replace("'''", '').strip()
+                    if len(paragraph) == 0:
+                        continue
 
-                parsed_par = nlp(unicode(paragraph))
+                    parsed_par = nlp(unicode(paragraph))
 
-                # Parse each sentence separately
-                for sent in parsed_par.sents:
-                    dependency_paths = parse_sentence(sent)
-                    if len(dependency_paths) > 0:
-                        print >> f_out, '\n'.join(['\t'.join(path) for path in dependency_paths])
+                    # Parse each sentence separately
+                    for sent in parsed_par.sents:
+                        dependency_paths = parse_sentence(sent)
+                        if len(dependency_paths) > 0:
+                            for dependency_triple in dependency_paths:
+                                f_path_out.write('%s\n' % dependency_triple[2])
+                                wrote_paths += 1
+
+                            print >> f_out, '\n'.join(['\t'.join(path) for path in dependency_paths])
+
+    print("Wrote %s paths to file: %s" % (wrote_paths, out_file + "_paths"))
+    print("Finished processing file: %s" % in_file)
 
 
 def parse_sentence(sent):
@@ -53,11 +63,13 @@ def parse_sentence(sent):
     """
 
     # Get all noun indices
-    indices = [(token, i, i) for i, token in enumerate(sent) if token.tag_[:2] == 'NN' and len(token.string.strip()) > 2]
+    indices = [(token, i, i) for i, token in enumerate(sent) if
+               token.tag_[:2] == 'NN' and len(token.string.strip()) > 2]
 
     # Add noun chunks for the current sentence
     # Don't include noun chunks with only one word - these are nouns already included
-    indices.extend([(np, np.start, np.end) for np in sent.doc.noun_chunks if sent.start <= np.start < np.end - 1 < sent.end])
+    indices.extend(
+        [(np, np.start, np.end) for np in sent.doc.noun_chunks if sent.start <= np.start < np.end - 1 < sent.end])
 
     # Get all dependency paths between nouns, up to length 4
     term_pairs = [(x[0], y[0]) for x in indices for y in indices if x[2] < y[1]]
@@ -104,17 +116,17 @@ def shortest_path((x, y)):
         lch_idx = i
         lch = hx[lch_idx]
     else:
-        lch_idx = i-1
+        lch_idx = i - 1
         lch = hx[lch_idx]
 
     # The path from x to the lowest common_ head
-    hx = hx[lch_idx+1:]
+    hx = hx[lch_idx + 1:]
     if lch and check_direction(lch, hx, lambda h: h.lefts):
         return None
     hx = hx[::-1]
 
     # The path from the lowest common_ head to y
-    hy = hy[lch_idx+1:]
+    hy = hy[lch_idx + 1:]
     if lch and check_direction(lch, hy, lambda h: h.rights):
         return None
 

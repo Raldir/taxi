@@ -179,6 +179,8 @@ def prediction(args):
                 test_set[tuple(key)] = line
                 test_set_mapping.append(tuple(key))
 
+    print("Dummy dataset print: %s" % test_set.keys()[0: min(len(test_set.keys()), 5)]) # Print first 5 entries if possible
+
     print('Dataset loaded.')
 
     print("Load model from '%s' with prefix '%s'..." % (os.path.abspath(args.model_path), args.model_prefix))
