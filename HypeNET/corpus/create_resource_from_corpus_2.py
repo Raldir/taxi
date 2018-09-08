@@ -32,8 +32,7 @@ def main():
         with codecs.open(triplet_file + '_id', 'w', 'utf-8') as f_out:
             for line in f_in:
                 try:
-                    x, y, path = line.strip().split('\t')
-                    x, y, path = unicode(x).encode('utf-8'), unicode(y).encode('utf-8'), unicode(path).encode('utf-8')
+                    x, y, path = unicode(line).encode('utf-8').strip().split('\t')
 
                     # Frequent path
                     x_id, y_id, path_id = term_to_id_db[x], term_to_id_db[y], path_to_id_db.get(path, -1)

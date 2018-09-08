@@ -50,7 +50,7 @@ def main():
                         wrote_paths += 1
 
                         if count >= frequent_path_count:
-                            out_frequent_path_file.write("%s\t%s\n" % (last_row, count))
+                            out_frequent_path_file.write("%s\n" % last_row)
                             wrote_frequent_paths += 1
 
                         count = 1
