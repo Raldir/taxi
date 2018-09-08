@@ -25,42 +25,34 @@ def main():
     in_file = args['<in_file>']
     out_file = args['<out_file>']
 
-    paths = {}
+    wrote_paths = 0
 
     with codecs.open(in_file, 'r', 'utf-8') as f_in:
         with codecs.open(out_file, 'w', 'utf-8') as f_out:
+            with codecs.open(out_file + "_paths", 'w', 'utf-8') as f_path_out:
 
-            # Read the next paragraph
-            for paragraph in f_in:
+                # Read the next paragraph
+                for paragraph in f_in:
 
-                # Skip empty lines
-                paragraph = paragraph.replace("'''", '').strip()
-                if len(paragraph) == 0:
-                    continue
+                    # Skip empty lines
+                    paragraph = paragraph.replace("'''", '').strip()
+                    if len(paragraph) == 0:
+                        continue
 
-                parsed_par = nlp(unicode(paragraph))
+                    parsed_par = nlp(unicode(paragraph))
 
-                # Parse each sentence separately
-                for sent in parsed_par.sents:
-                    dependency_paths = parse_sentence(sent)
-                    if len(dependency_paths) > 0:
-                        for dependency_triple in dependency_paths:
-                            dependency_path = dependency_triple[2]
+                    # Parse each sentence separately
+                    for sent in parsed_par.sents:
+                        dependency_paths = parse_sentence(sent)
+                        if len(dependency_paths) > 0:
+                            for dependency_triple in dependency_paths:
+                                f_path_out.write('%s\n' % dependency_triple[2])
+                                wrote_paths += 1
 
-                            if dependency_path not in paths:
-                                paths[dependency_path] = 0
+                            print >> f_out, '\n'.join(['\t'.join(path) for path in dependency_paths])
 
-                            paths[dependency_path] += 1
-
-                        print >> f_out, '\n'.join(['\t'.join(path) for path in dependency_paths])
-
-    print("Wrote %s paths to file: %s" % (len(paths), out_file + "_paths"))
-    with codecs.open(out_file + "_paths", 'w', 'utf-8') as out_path_file:
-        for path in paths:
-            frequency = paths[path]
-
-            out_path_file.write('%s\t%s\n' % (path, frequency))
-
+    print("Wrote %s paths to file: %s" % (wrote_paths, out_file + "_paths"))
+    print("Finished processing file: %s" % in_file)
 
 
 def parse_sentence(sent):

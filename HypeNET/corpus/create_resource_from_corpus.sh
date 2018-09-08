@@ -32,24 +32,27 @@ triplet_file="wiki_parsed"
 cat $directory/$wiki_dump_file"_"*"_parsed" > $directory/$triplet_file
 echo "Files concated to $triplet_file."
 
-echo "Create the frequent paths file (take paths that occurred approximately at least 5 times)."
 # To take paths that occurred with at least 5 different pairs,"
 # replace with the commented lines - consumes much more memory).
 # sort -u $triplet_file | cut -f3 -d$'\t' > paths;
 # awk -F$'\t' '{a[$1]++; if (a[$1] == 5) print $1}' paths > frequent_paths;
 # rm paths;
-echo "Create paths for parsed files."
 #for x in $(eval echo {$start..$end})
 #do
 #( awk -v FS='\t' '{i[$3]++} END{for(x in i){print x, i[x]}}' "$directory/$(echo $wiki_dump_file)_"$x"_parsed" > $directory/paths"_"$x ) &
 #( awk -v OFS='\t' '{i[$3]++} END{for(x in i){print x, i[x]}}' "$directory/$(echo $wiki_dump_file)_"$x"_parsed" > $directory/paths"_"$x ) &
 #done
 #wait
+echo "Concat paths files."
 cat $directory/$wiki_dump_file"_"*"_parsed_paths" > $directory/paths_temp
 
-echo "Number of paths to sum: " $(wc -l $directory/paths_temp)
+echo "Sort temporary paths file."
+sort $directory/paths_temp > $directory/paths_temp_sorted
 
-python count_paths.py $directory/paths_temp $directory/paths $directory/frequent_paths $frequent_path_count
+echo "Create the frequent paths file (take paths that occurred approximately at least $frequent_path_count times)."
+echo "Number of paths to sum: " $(wc -l $directory/paths_temp_sorted | grep -o -w -E "[0-9]+")
+python count_paths.py $directory/paths_temp_sorted $directory/paths $directory/frequent_paths $frequent_path_count
+
 echo "Paths for parsed files created."
 
 #echo "Concat paths..."

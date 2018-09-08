@@ -21,53 +21,56 @@ def main():
         <out_frequent_path_file> = Output frequent paths file
         <frequent_path_count>  = If a paths occured equal or higher to this number it will be a frequent paths
     """)
-    in_file = args['<parsed_wiki_path_file>']
+    in_filename = args['<parsed_wiki_path_file>']
     out_path_filename = args['<out_path_file>']
     out_frequent_path_filename = args['<out_frequent_path_file>']
     frequent_path_count = int(args['<frequent_path_count>'])
 
-    paths = {}
-
-    print("Start reading from file: %s" % in_file)
+    print("Start reading from file: %s" % in_filename)
     line_count = 0
+    wrote_paths = 0
+    wrote_frequent_paths = 0
 
-    with codecs.open(in_file, 'r', 'utf-8') as csvfile:
-        # Example row:
-        # X/PROPN/nsubj>_publish/VERB/ROOT_<Y/NOUN/dobj 123
-        for line in csvfile:
-            row = line.split(DELIMITER)
-            path = row[0]
-            frequency = int(row[1])
+    last_row = None
+    count = 1
 
-            if path not in paths:
-                paths[path] = 0
+    with codecs.open(in_filename, 'r', 'utf-8') as in_file:
+        with codecs.open(out_path_filename, 'w', 'utf-8') as out_path_file:
+            with codecs.open(out_frequent_path_filename, 'w', 'utf-8') as out_frequent_path_file:
 
-            paths[path] += frequency
-            line_count += 1
+                # Example row: X/PROPN/nsubj>_publish/VERB/ROOT_<Y/NOUN/dobj
+                for line in in_file:
+                    current = line.strip()
 
-            if line_count % 10000 == 0:
-                print("   Read %s lines." % line_count)
+                    if last_row == current:
+                        count += 1
+                    elif last_row != current and last_row is not None:
+                        # Write new line
+                        out_path_file.write("%s\t%s\n" % (last_row, count))
+                        wrote_paths += 1
 
-    print("Finished reading.")
+                        if count >= frequent_path_count:
+                            out_frequent_path_file.write("%s\t%s\n" % (last_row, count))
+                            wrote_frequent_paths += 1
 
-    print("Write paths to file: %s" % out_path_filename)
-    print("Write frequent paths (occured >= %s) to file: %s" % (frequent_path_count, out_frequent_path_filename))
-    frequent_path_wrote = 0
+                        count = 1
 
-    with codecs.open(out_path_filename, 'w', 'utf-8') as out_path_file:
-        with codecs.open(out_frequent_path_filename, 'w', 'utf-8') as out_frequent_path_file:
+                    last_row = current
+                    line_count += 1
 
-            for path in paths:
-                frequency = paths[path]
+                    if line_count % 100000 == 0:
+                        print("   Read %s lines." % line_count)
 
-                out_path_file.write('%s\t%s\n' % (path, frequency))
+                # Write the last line to the files
+                out_path_file.write("%s\t%s\n" % (last_row, count))
 
-                if frequency >= frequent_path_count:
-                    out_frequent_path_file.write("%s\n" % path)
-                    frequent_path_wrote += 1
+                if count >= frequent_path_count:
+                    out_frequent_path_file.write("%s\t%s\n" % (last_row, count))
 
-    print("Wrote %s paths." % len(paths))
-    print("Wrote %s frequent paths." % frequent_path_wrote)
+    print("Finished counting paths.")
+    print("Wrote %s paths." % wrote_paths)
+    print("Wrote %s frequent paths." % wrote_frequent_paths)
+
 
 if __name__ == '__main__':
     main()
