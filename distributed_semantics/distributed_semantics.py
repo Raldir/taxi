@@ -38,18 +38,20 @@ def compare_to_gold(gold, taxonomy, model,  model_poincare = None, outliers = []
     global compound_operator
     removed_outliers = []
     for element in taxonomy_c:
-        if (element[1].replace(' ', compound_operator), element[2].replace(' ', compound_operator)) in outliers:
+        if (element[0].replace(' ', compound_operator), element[1].replace(' ', compound_operator)) in outliers:
             continue
-        removed_outliers.append((element[1], element[2]))
+        removed_outliers.append((element[0], element[1]))
 
     if new_nodes:
         for element in new_nodes:
             removed_outliers.append((element[0].replace(compound_operator, " "), element[1].replace(compound_operator, " ")))
 
+    removed_outliers = list(set(removed_outliers))
+
     correct = 0
     for element in removed_outliers:
         for ele_g in gold:
-            if element[0] == ele_g[1] and element[1] == ele_g[2]:
+            if element[0] == ele_g[0] and element[1] == ele_g[1]:
                 correct+=1
                 break
     precision = correct / float(len(removed_outliers))
@@ -95,12 +97,12 @@ def get_rank(entity1, entity2, model, threshhold):
 
 #do not need to check if words in vocab since outliers must be in vocab
 #TODO could happen that outlier would connect to new outlier, but is not regarded, so currently adding all but outlier, so order of replacing outliers is not irrelevant
-def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold, no_parents, no_co):
+def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold, no_parents, no_co, wordnet = False):
     structure = {}
     new_nodes = set([])
     new_relationships = []
-    gold_nodes = [relation[1] for relation in gold] + [relation[2] for relation in gold]
-    taxonomy_nodes = (set([relation[1] for relation in taxonomy] + [relation[2] for relation in taxonomy]))
+    gold_nodes = [relation[0] for relation in gold] + [relation[1] for relation in gold]
+    taxonomy_nodes = (set([relation[0] for relation in taxonomy] + [relation[1] for relation in taxonomy]))
     results_parents = []
     pairs_parents = []
     results_co = []
@@ -122,10 +124,10 @@ def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold, no_paren
 
     relations = taxonomy.copy()
     for i in range(len(relations)):
-        relations[i] = (relations[i][0], relations[i][1].replace(" ", compound_operator), relations[i][2].replace(" ", compound_operator))
+        relations[i] = (relations[i][0].replace(" ", compound_operator), relations[i][1].replace(" ", compound_operator))
 
-    for parent in [relation[2] for relation in relations]:
-        structure[parent] = [relation[1] for relation in relations if relation[2] == parent]
+    for parent in [relation[1] for relation in relations]:
+        structure[parent] = [relation[0] for relation in relations if relation[1] == parent]
 
     for node in new_nodes:
         result_co_min = 10000000
@@ -140,7 +142,7 @@ def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold, no_paren
             cleaned_co_hyponyms = []
             if len(structure[key]) < 1:
                 continue
-            result_parent, pair_parent, result_co, pair_co  = get_rank(node.replace(" ", compound_operator), key, structure[key], model, model_poincare, no_parents, no_co)
+            result_parent, pair_parent, result_co, pair_co  = get_rank(node.replace(" ", compound_operator), key, structure[key], model, model_poincare, no_parents, no_co, compound = True, wordnet = wordnet)
             if result_parent < result_parent_min and result_parent != 0:
                 result_parent_min = result_parent
                 pair_parent_min = pair_parent
@@ -257,10 +259,10 @@ def calculate_outliers(relations_o, model, model_poincare = None, threshold = No
     pairs_co = []
     relations = relations_o.copy()
     for i in range(len(relations)):
-        relations[i] = (relations[i][0], relations[i][1].replace(" ", compound_operator), relations[i][2].replace(" ", compound_operator))
+        relations[i] = (relations[i][0].replace(" ", compound_operator), relations[i][1].replace(" ", compound_operator))
 
-    for parent in [relation[2] for relation in relations]:
-        structure[parent] = [relation[1] for relation in relations if relation[2] == parent]
+    for parent in [relation[1] for relation in relations]:
+        structure[parent] = [relation[0] for relation in relations if relation[1] == parent]
 
     for key in structure:
         #print(key)
@@ -427,11 +429,9 @@ def run(mode, domain, embedding, exclude_parent = False, include_co = False, com
     elif mode == 'combined_embeddings_removal_and_new':
         gold, relations = read_all_data(domain)
         new_nodes = connect_new_nodes(taxonomy = relations, gold = gold, model = model, model_poincare = model_poincare, threshold = 2,  no_parents = exclude_parent, no_co = exclude_co, wordnet = wordnet)
-        compare_to_gold(gold = gold, taxonomy = relations, model = model, model_poincare = model_poincare, new_nodes =  new_nodes)
-        outliers = calculate_outliers(relations, model, threshold = 6, model_poincare = model_poincare, compound = compound, no_parents = exclude_parent, no_co = exclude_co, wordnet = wordnet)
-        compare_to_gold(gold = gold, taxonomy = relations, outliers = outliers, model = model, model_poincare = model_poincare)
-        compare_to_gold(gold = gold, taxonomy = relations, outliers = outliers, model = model, model_poincare = model_poincare, new_nodes =  new_nodes)
-
+        relations1 = compare_to_gold(gold = gold, taxonomy = relations, model = model, model_poincare = model_poincare, new_nodes =  new_nodes)
+        outliers = calculate_outliers(relations1, model, threshold = 6, model_poincare = model_poincare, compound = compound, no_parents = exclude_parent, no_co = exclude_co, wordnet = wordnet)
+        compare_to_gold(gold = gold, taxonomy = relations1, outliers = outliers, model = model, model_poincare = model_poincare)
 
 if __name__ == '__main__':
     main()
