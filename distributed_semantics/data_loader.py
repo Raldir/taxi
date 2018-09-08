@@ -197,13 +197,13 @@ def read_all_data(domain = 'science'):
     with open(filename_in, 'r') as f:
         reader = csv.reader(f, delimiter = '\t')
         for i, line in enumerate(reader):
-            relations.append((line[0], line[1], line[2]))
+            relations.append(( line[1], line[2]))
 
     gold= []
     with open(filename_gold, 'r') as f:
         reader = csv.reader(f, delimiter = '\t')
         for i, line in enumerate(reader):
-            gold.append((line[0], line[1], line[2]))
+            gold.append((line[1], line[2]))
     return [gold, relations]
 
 def create_with_freq(freqs, input_name, domain):
