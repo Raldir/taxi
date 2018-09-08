@@ -20,7 +20,6 @@ from gensim.viz.poincare import poincare_2d_visualization
 from gensim.test.utils import datapath
 from data_loader import read_all_data, read_trial_data, read_input, compound_operator
 import plotly.plotly as py
-import operator
 from nltk.corpus import wordnet as wn
 #py.sign_in('RamiA', 'lAA8oTL51miiC79o3Hrz')
 
@@ -196,7 +195,7 @@ def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold, no_paren
 
     return new_relationships
 
-def get_rank(current_child, parent, children, model, model_poincare, no_parents, no_co, compound  = True,  wordnet = False):
+def get_rank(current_child, parent, children, model, model_poincare, no_parents, no_co, compound  = True, wordnet = False):
     result_co = 0
     pair_co  = 0
     result_parent = 0
@@ -248,7 +247,9 @@ def get_rank(current_child, parent, children, model, model_poincare, no_parents,
     return [result_parent, pair_parent, result_co, pair_co]
 
 
-def calculate_ranks(relations_o, model, model_poincare, current_node = None, no_parents = False, no_co = False, compound = True):
+#create dictionary mit den begirffen wegen bindestrich
+def calculate_outliers(relations_o, model, model_poincare = None, threshold = None, no_parents = False, no_co = True, compound = False, wordnet = False):
+    outliers = []
     structure = {}
     results_parents = []
     pairs_parents = []
@@ -277,23 +278,15 @@ def calculate_ranks(relations_o, model, model_poincare, current_node = None, no_
 
 
         cleaned_co_hyponyms_copy = cleaned_co_hyponyms.copy()
-        if current_node == None:
-            for child in cleaned_co_hyponyms_copy:
-                result_parent, pair_parent, result_co, pair_co = get_rank(child, key, cleaned_co_hyponyms, model, model_poincare, no_parents, no_co, compound)
-                if result_parent != 0:
-                    results_parents.append(result_parent)
-                    pairs_parents.append(pair_parent)
-                if result_co != 0:
-                    results_co.append(result_co)
-                    pairs_co.append(pair_co)
+        for child in cleaned_co_hyponyms_copy:
+            result_parent, pair_parent, result_co, pair_co = get_rank(child, key, cleaned_co_hyponyms, model, model_poincare, no_parents, no_co, compound, wordnet)
+            if result_parent != 0:
+                results_parents.append(result_parent)
+                pairs_parents.append(pair_parent)
+            if result_co != 0:
+                results_co.append(result_co)
+                pairs_co.append(pair_co)
 
-    return [results_parents, pairs_parents, results_co, pairs_co]
-
-#create dictionary mit den begirffen wegen bindestrich
-def calculate_outliers(relations_o, model, model_poincare = None, threshold = None, no_parents = False, no_co = True, compound = False):
-    outliers = []
-
-    results_parents, pairs_parents, results_co, pairs_co = calculate_ranks(relations_o, model, model_poincare, no_parents = no_parents,no_co = no_co, compound = compound)
 
     if not no_parents:
         results_normalized1= list(preprocessing.scale(results_parents))
@@ -371,14 +364,15 @@ def main():
     parser.add_argument('-ep', '--exparent', action='store_true', help='Exclude "parent" relations')
     parser.add_argument('-ico', '--inco', action='store_true', help='Include "co-hypernym relations')
     parser.add_argument('-com', '--compound', action='store_true', help='Includes compound word in outlier removal')
+    parser.add_argument('-wn', '--wordnet', action ='store_true', help= 'Use Wordnet instead of own embeddings')
     parser.add_argument('--experiment_name', nargs='?', type=str, default=None, help="Name of the Experiment")
     parser.add_argument('--log', action='store_true', help="Logs taxonomy and results")
     args = parser.parse_args()
     print("Mode: ", args.mode)
-    run(args.mode, args.domain, args.embedding, args.exparent, args.inco, args.compound, args.experiment_name, args.log)
+    run(args.mode, args.domain, args.embedding, args.exparent, args.inco, args.compound, args.wordnet, args.experiment_name, args.log)
 
 
-def run(mode, domain, embedding, exclude_parent = False, include_co = False, compound = False, experiment_name = None, log = False):
+def run(mode, domain, embedding, exclude_parent = False, include_co = False, compound = False, wordnet = False,  experiment_name = None, log = False):
     if embedding == "fasttext":
         #model = gensim.models.KeyedVectors.load_word2vec_format('wiki-news-300d-1M-subword.vec', binary=False)
         model = gensim.models.FastText.load_fasttext_format('wiki.en.bin')
@@ -416,25 +410,25 @@ def run(mode, domain, embedding, exclude_parent = False, include_co = False, com
         thresholds = [6]
         for value in thresholds:
             gold, relations = read_all_data(domain)
-            outliers = calculate_outliers(relations, model, threshold = value, model_poincare = model_poincare, compound = compound, no_parents = exclude_parent, no_co = exclude_co)
+            outliers = calculate_outliers(relations, model, threshold = value, model_poincare = model_poincare, compound = compound, no_parents = exclude_parent, no_co = exclude_co, wordnet = wordnet)
             compare_to_gold(gold = gold, taxonomy = relations, outliers = outliers, model = model, log  = "logs/" + mode + "_" + embedding + "_" + str(value), write_file = "out/" + mode + "_" + embedding + "_" + str(value))
 
 
     elif mode == 'combined_embeddings_new_nodes':
-        thresholds = [2]
-        #thresholds = [2,4,6,8,10,12,14] #poincare testrun
+        #thresholds = [2]
+        thresholds = [2,4,6,8,10,12,14] #poincare testrun
         #thresholds = [12,14,18,20] #co-hyper testrun
         for value in thresholds:
             gold, relations = read_all_data(domain)
-            new_nodes = connect_new_nodes(taxonomy = relations, gold = gold, model = model, model_poincare = model_poincare, threshold = value,  no_parents = exclude_parent, no_co = exclude_co)
+            new_nodes = connect_new_nodes(taxonomy = relations, gold = gold, model = model, model_poincare = model_poincare, threshold = value,  no_parents = exclude_parent, no_co = exclude_co, wordnet = wordnet)
             compare_to_gold(gold = gold, taxonomy = relations, model = model, model_poincare = model_poincare, new_nodes =  new_nodes)
 
 
     elif mode == 'combined_embeddings_removal_and_new':
         gold, relations = read_all_data(domain)
-        new_nodes = connect_new_nodes(taxonomy = relations, gold = gold, model = model, model_poincare = model_poincare, threshold = 2,  no_parents = exclude_parent, no_co = exclude_co)
+        new_nodes = connect_new_nodes(taxonomy = relations, gold = gold, model = model, model_poincare = model_poincare, threshold = 2,  no_parents = exclude_parent, no_co = exclude_co, wordnet = wordnet)
         compare_to_gold(gold = gold, taxonomy = relations, model = model, model_poincare = model_poincare, new_nodes =  new_nodes)
-        outliers = calculate_outliers(relations, model, threshold = 6, model_poincare = model_poincare, compound = compound, no_parents = exclude_parent, no_co = exclude_co)
+        outliers = calculate_outliers(relations, model, threshold = 6, model_poincare = model_poincare, compound = compound, no_parents = exclude_parent, no_co = exclude_co, wordnet = wordnet)
         compare_to_gold(gold = gold, taxonomy = relations, outliers = outliers, model = model, model_poincare = model_poincare)
         compare_to_gold(gold = gold, taxonomy = relations, outliers = outliers, model = model, model_poincare = model_poincare, new_nodes =  new_nodes)
 
