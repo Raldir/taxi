@@ -40,7 +40,6 @@ def main():
                         print >> f_out, '\t'.join(map(str, (x_id, y_id, path_id)))
                 except Exception as e:
                     print("ERROR: %s" % e)
-		    print("Line: %s" % line)
                     continue
 
 
