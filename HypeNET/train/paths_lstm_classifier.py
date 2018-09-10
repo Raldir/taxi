@@ -112,10 +112,12 @@ class PathLSTMClassifier(BaseEstimator):
                                                         x_y_vectors=x_y_vector
                                                         )
                 npval = val_one_instance.npvalue()
-                val = np.argmax(npval)
+                x = npval[0]
+                y = npval[1]
+                val = 1 if y >= 0.5 else 0  #np.argmax(npval)
 
                 if full_information:
-                    vals.append((val, npval[val]))
+                    vals.append((val, y))
                 else:
                     vals.append(val)
 
