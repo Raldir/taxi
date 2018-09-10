@@ -42,6 +42,8 @@ def main():
                     print("ERROR: %s" % e)
                     continue
 
+    print("Finished processing triplet file: %s" % triplet_file)
+
 
 if __name__ == '__main__':
     main()
