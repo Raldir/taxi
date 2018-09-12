@@ -104,6 +104,7 @@ def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold, no_paren
     gold_nodes = [relation[0] for relation in gold] + [relation[1] for relation in gold]
     taxonomy_nodes = (set([relation[0] for relation in taxonomy] + [relation[1] for relation in taxonomy]))
     results_parents = []
+    results_substring = []
     pairs_parents = []
     results_co = []
     pairs_co = []
@@ -130,6 +131,7 @@ def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold, no_paren
         structure[parent] = [relation[0] for relation in relations if relation[1] == parent]
 
     for node in new_nodes:
+        node = node.replace(" ", compound_operator)
         result_co_min = 10000000
         pair_co_min  = 0
         result_parent_min = 10000000
@@ -142,7 +144,7 @@ def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold, no_paren
             cleaned_co_hyponyms = []
             if len(structure[key]) < 1:
                 continue
-            result_parent, pair_parent, result_co, pair_co  = get_rank(node.replace(" ", compound_operator), key, structure[key], model, model_poincare, no_parents, no_co, compound = True, wordnet = wordnet)
+            result_parent, pair_parent, result_co, pair_co  = get_rank(node, key, structure[key], model, model_poincare, no_parents, no_co, compound = True, wordnet = wordnet)
             if result_parent < result_parent_min and result_parent != 0:
                 result_parent_min = result_parent
                 pair_parent_min = pair_parent
@@ -156,6 +158,10 @@ def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold, no_paren
         if result_co_min != 10000000:
             results_co.append(result_co_min)
             pairs_co.append(pair_co_min)
+        elif node.split('_')[0] in structure:
+            results_substring.append((node, node.split('_')[0]))
+        elif node.split('_')[-1] in structure:
+            results_substring.append((node, node.split('_')[-1]))
 
 
     results_normalized1 = []
@@ -166,28 +172,32 @@ def connect_new_nodes(gold, taxonomy, model, model_poincare, threshold, no_paren
     if not no_co:
         results_normalized2= list(preprocessing.scale(results_co))
 
-    results_normalized = results_normalized1 + results_normalized2
+    results_substring = set(results_substring)
 
-    pairs_all = []
-    results_all = []
-    for i, element in enumerate(pairs_parents):
-        if element in pairs_co:
-            results_all.append((results_normalized[i] + results_normalized[len(results_parents) + pairs_co.index(element)]) / 2)
-            pairs_all.append(element)
-        else:
-            results_all.append(results_normalized[i])
-            pairs_all.append(element)
-    for i, element in enumerate(pairs_co):
-        if element not in pairs_parents:
-            results_all.append(results_normalized[len(results_parents) + i])
-            pairs_all.append(element)
-
-    new_relationships = list(find_outliers(results_all, pairs_all, threshold, mode = 'min'))
+    # results_normalized = results_normalized1 + results_normalized2
+    #
+    # pairs_all = []
+    # results_all = []
+    # for i, element in enumerate(pairs_parents):
+    #     if element in pairs_co:
+    #         results_all.append((results_normalized[i] + results_normalized[len(results_parents) + pairs_co.index(element)]) / 2)
+    #         pairs_all.append(element)
+    #     else:
+    #         results_all.append(results_normalized[i])
+    #         pairs_all.append(element)
+    # for i, element in enumerate(pairs_co):
+    #     if element not in pairs_parents:
+    #         results_all.append(results_normalized[len(results_parents) + i])
+    #         pairs_all.append(element)
+    #
+    # new_relationships = list(find_outliers(results_all, pairs_all, threshold, mode = 'min'))
     #
     # outliers_parents  = set([])
     # outliers_co = set([])
     # #POINCARE
-    # #outliers_parents = find_outliers(results_normalized1, pairs_parents, threshold, mode = 'min')
+    outliers_parents = find_outliers(results_normalized1, pairs_parents, threshold, mode = 'min')
+    #print(results_substring)
+    new_relationships = list(outliers_parents|results_substring)
     # #CO_OCCURENCE
     # outliers_co = find_outliers(results_normalized2, pairs_co, threshold, mode = 'min')
     #
@@ -282,7 +292,7 @@ def calculate_outliers(relations_o, model, model_poincare = None, threshold = No
         cleaned_co_hyponyms_copy = cleaned_co_hyponyms.copy()
         for child in cleaned_co_hyponyms_copy:
             result_parent, pair_parent, result_co, pair_co = get_rank(child, key, cleaned_co_hyponyms, model, model_poincare, no_parents, no_co, compound, wordnet)
-            if result_parent != 0:
+            if result_parent != 0 and child.split("_")[0] != key and child.split("_")[-1] != key:
                 results_parents.append(result_parent)
                 pairs_parents.append(pair_parent)
             if result_co != 0:
@@ -320,6 +330,7 @@ def calculate_outliers(relations_o, model, model_poincare = None, threshold = No
     if not no_co and not no_parents:
         outliers = list(outliers_parents.intersection(outliers_co))
         #outliers = list(outliers_parents | outliers_co)
+    #print(outliers)
     return outliers
 
 
@@ -429,9 +440,11 @@ def run(mode, domain, embedding, exclude_parent = False, include_co = False, com
     elif mode == 'combined_embeddings_removal_and_new':
         gold, relations = read_all_data(domain)
         new_nodes = connect_new_nodes(taxonomy = relations, gold = gold, model = model, model_poincare = model_poincare, threshold = 2,  no_parents = exclude_parent, no_co = exclude_co, wordnet = wordnet)
+        outliers = calculate_outliers(relations, model, threshold = 6, model_poincare = model_poincare, compound = compound, no_parents = exclude_parent, no_co = exclude_co, wordnet = wordnet)
         relations1 = compare_to_gold(gold = gold, taxonomy = relations, model = model, model_poincare = model_poincare, new_nodes =  new_nodes)
+        relations2 = compare_to_gold(gold = gold, taxonomy = relations, model = model, model_poincare = model_poincare, new_nodes =  new_nodes, outliers = outliers)
         outliers = calculate_outliers(relations1, model, threshold = 6, model_poincare = model_poincare, compound = compound, no_parents = exclude_parent, no_co = exclude_co, wordnet = wordnet)
-        compare_to_gold(gold = gold, taxonomy = relations1, outliers = outliers, model = model, model_poincare = model_poincare)
+        compare_to_gold(gold = gold, taxonomy = relations1, outliers = outliers, new_nodes = new_nodes, model = model, model_poincare = model_poincare)
 
 if __name__ == '__main__':
     main()
