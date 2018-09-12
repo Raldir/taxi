@@ -48,8 +48,7 @@ def main():
 
                 l2r_db[key] = current
             except Exception as e:
-	        print("ERROR: %s" % e)
-                print("Line: %s" % line)
+                print("ERROR: %s" % e)
                 continue
 
     l2r_db.sync()
