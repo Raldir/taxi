@@ -93,24 +93,25 @@ done
 wait
 
 echo "Concat temporary id-triplet files..."
-cat $directory/id_triplet_file_* > $directory/id_triplet_file_temp;
+#cat $directory/id_triplet_file_* > $directory/id_triplet_file_temp;
+cat $directory/id_triplet_file_* > $directory/id_triplet_file;
 
-echo "Compute id-triplet files..."
+#echo "Compute id-triplet files..."
 #for x in {0..4}
 #do
 #( gawk -F $'\t' '{ if($1%5==$x) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_$x ) &
 #done
 
-echo "Compute id-triplet files..."
-( gawk -v OFS='\t' '{ if($1%5==0) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_0 ) &
-( gawk -v OFS='\t' '{ if($1%5==1) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_1 ) &
-( gawk -v OFS='\t' '{ if($1%5==2) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_2 ) &
-( gawk -v OFS='\t' '{ if($1%5==3) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_3 ) &
-( gawk -v OFS='\t' '{ if($1%5==4) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_4 ) &
-wait
+#echo "Compute id-triplet files..."
+#( gawk -v OFS='\t' '{ if($1%5==0) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_0 ) &
+#( gawk -v OFS='\t' '{ if($1%5==1) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_1 ) &
+#( gawk -v OFS='\t' '{ if($1%5==2) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_2 ) &
+#( gawk -v OFS='\t' '{ if($1%5==3) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_3 ) &
+#( gawk -v OFS='\t' '{ if($1%5==4) {a[$1][$2][$3]+=$4; } } END {for (i in a) for (j in a[i]) for (k in a[i][j]) print i, j, k, a[i][j][k]}' $directory/id_triplet_file_temp > $directory/id_triplet_file_4 ) &
+#wait
 
-echo "Concat id-triplet files..."
-cat $directory/id_triplet_file_* > $directory/id_triplet_file;
+#echo "Concat id-triplet files..."
+#cat $directory/id_triplet_file_* > $directory/id_triplet_file;
 
 echo "Remove temporary id-triplet-files..."
 #rm $directory/id_triplet_file_temp

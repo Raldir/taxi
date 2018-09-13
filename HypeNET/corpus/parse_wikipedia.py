@@ -4,7 +4,6 @@ import spacy
 from spacy.en import English
 from docopt import docopt
 
-
 def main():
     """
     Creates a "knowledge resource" from triplets file
@@ -27,15 +26,16 @@ def main():
 
     wrote_paths = 0
 
-    with codecs.open(in_file, 'r', 'utf-8') as f_in:
-        with codecs.open(out_file, 'w', 'utf-8') as f_out:
-            with codecs.open(out_file + "_paths", 'w', 'utf-8') as f_path_out:
+    with codecs.open(in_file, 'r') as f_in:
+        with codecs.open(out_file, 'w') as f_out:
+            with codecs.open(out_file + "_paths", 'w') as f_path_out:
 
                 # Read the next paragraph
                 for paragraph in f_in:
 
                     # Skip empty lines
                     paragraph = paragraph.replace("'''", '').strip()
+                    paragraph = paragraph.decode("ascii", errors="ignore").encode()
                     if len(paragraph) == 0:
                         continue
 
@@ -49,7 +49,8 @@ def main():
                                 f_path_out.write('%s\n' % dependency_triple[2])
                                 wrote_paths += 1
 
-                            print >> f_out, '\n'.join(['\t'.join(path) for path in dependency_paths])
+                            out = '\n'.join(['\t'.join(path) for path in dependency_paths])
+                            print >> f_out, out
 
     print("Wrote %s paths to file: %s" % (wrote_paths, out_file + "_paths"))
     print("Finished processing file: %s" % in_file)

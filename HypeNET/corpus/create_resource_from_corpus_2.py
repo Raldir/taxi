@@ -28,11 +28,11 @@ def main():
     term_to_id_db = bsddb.btopen(resource_prefix + '_term_to_id.db')
     path_to_id_db = bsddb.btopen(resource_prefix + '_path_to_id.db')
 
-    with codecs.open(triplet_file, 'r', 'utf-8') as f_in:
-        with codecs.open(triplet_file + '_id', 'w', 'utf-8') as f_out:
+    with codecs.open(triplet_file, 'r') as f_in:
+        with codecs.open(triplet_file + '_id', 'w') as f_out:
             for line in f_in:
                 try:
-                    x, y, path = unicode(line).encode('utf-8').strip().split('\t')
+                    x, y, path = str(line).strip().split('\t')
 
                     # Frequent path
                     x_id, y_id, path_id = term_to_id_db[x], term_to_id_db[y], path_to_id_db.get(path, -1)

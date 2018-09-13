@@ -34,9 +34,9 @@ def main():
     last_row = None
     count = 1
 
-    with codecs.open(in_filename, 'r', 'utf-8') as in_file:
-        with codecs.open(out_path_filename, 'w', 'utf-8') as out_path_file:
-            with codecs.open(out_frequent_path_filename, 'w', 'utf-8') as out_frequent_path_file:
+    with codecs.open(in_filename, 'r') as in_file:
+        with codecs.open(out_path_filename, 'w') as out_path_file:
+            with codecs.open(out_frequent_path_filename, 'w') as out_frequent_path_file:
 
                 # Example row: X/PROPN/nsubj>_publish/VERB/ROOT_<Y/NOUN/dobj
                 for line in in_file:

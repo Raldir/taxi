@@ -32,11 +32,11 @@ def main():
 
     # Load the frequent paths
     print 'Saving the paths...'
-    with codecs.open(frequent_paths_file, 'r', 'utf-8') as f_in:
-        frequent_paths = set([line.encode('utf-8').strip() for line in f_in])
+    with codecs.open(frequent_paths_file, 'r') as f_in:
+        frequent_paths = set([line.encode('ascii', errors='ignore').strip() for line in f_in])
 
     # Save the paths
-    path_to_id = { path : i for i, path in enumerate(list(frequent_paths)) }
+    path_to_id = {path: i for i, path in enumerate(list(frequent_paths))}
     path_to_id_db = bsddb.btopen(resource_prefix + '_path_to_id.db', 'c')
     id_to_path_db = bsddb.btopen(resource_prefix + '_id_to_path.db', 'c')
 
@@ -52,11 +52,11 @@ def main():
 
     # Load the terms
     print 'Saving the terms...'
-    with codecs.open(terms_file, 'r', 'utf-8') as f_in:
-        terms = [unicode(line).encode('utf-8').strip() for line in f_in]
+    with codecs.open(terms_file, 'r') as f_in:
+        terms = [unicode(line).encode('ascii', errors='ignore').strip() for line in f_in]
 
     # Save the terms
-    term_to_id = { term : i for i, term in enumerate(terms) }
+    term_to_id = {term: i for i, term in enumerate(terms)}
     term_to_id_db = bsddb.btopen(resource_prefix + '_term_to_id.db', 'c')
     id_to_term_db = bsddb.btopen(resource_prefix + '_id_to_term.db', 'c')
 

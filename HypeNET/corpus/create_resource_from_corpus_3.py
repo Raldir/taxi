@@ -35,10 +35,10 @@ def main():
 
     l2r_db = bsddb.btopen(resource_prefix + '_l2r.db', 'c')
 
-    with codecs.open(id_triplet_file, 'r', 'utf-8') as f_in:
+    with codecs.open(id_triplet_file, 'r') as f_in:
         for line in f_in:
             try:
-                x, y, path, count = unicode(line).encode('utf-8').strip().split('\t')
+                x, y, path, count = str(line).strip().split('\t')
 
                 key = str(x) + '###' + str(y)
                 current = '%s:%s' % (path, count)
