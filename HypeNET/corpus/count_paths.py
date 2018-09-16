@@ -58,7 +58,7 @@ def main():
                     last_row = current
                     line_count += 1
 
-                    if line_count % 100000 == 0:
+                    if line_count % 1000000 == 0:
                         print("   Read %s lines." % line_count)
 
                 # Write the last line to the files

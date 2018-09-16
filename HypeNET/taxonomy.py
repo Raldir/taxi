@@ -44,7 +44,6 @@ def generate_keys(corpus, dataset_keys):
         if id_x != -1 and id_y != -1:
             full_key += 1
 
-
         keys.append((id_x, id_y))
 
     print("Found %s (%.2f%%) known terms and %s (%.2f%%) unknown terms in corpus with an input set of %s terms."
@@ -75,7 +74,7 @@ def load_paths(corpus_path, corpus_prefix, dataset_keys, lemma_index, pos_index,
     print('Corpus loaded.')
 
     keys = generate_keys(corpus, dataset_keys)
-    #keys = [(corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))) for (x, y) in dataset_keys]
+    # keys = [(corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))) for (x, y) in dataset_keys]
 
     print("Generate paths...")
     paths_x_to_y = [{vectorize_path(path, lemma_index, pos_index, dep_index, dir_index): count
@@ -180,15 +179,13 @@ def training(args):
     print("Training finished.")
 
     print("Save model to '%s' with prefix '%s'..." % (os.path.abspath(args.model_path), args.model_prefix))
-    #classifier.save_model(args.model_path + args.model_prefix, [lemma_index, pos_index, dep_index, dir_index])
+    # classifier.save_model(args.model_path + args.model_prefix, [lemma_index, pos_index, dep_index, dir_index])
     print("Model saved.")
 
     print("Training task finished.")
 
-    return classifier, lemma_index, pos_index, dep_index, dir_index
 
-
-def prediction(args, classifier, lemma_index, pos_index, dep_index, dir_index):
+def prediction(args):
     print("Started prediction.")
 
     print("Loading the dataset from file '%s'..." % args.hype_file)
@@ -210,8 +207,8 @@ def prediction(args, classifier, lemma_index, pos_index, dep_index, dir_index):
     print('Dataset loaded.')
 
     print("Load model from '%s' with prefix '%s'..." % (os.path.abspath(args.model_path), args.model_prefix))
-    #classifier, lemma_index, pos_index, dep_index, dir_index = load_model(args.model_path + args.model_prefix)
-    #print("Model loaded.")
+    classifier, lemma_index, pos_index, dep_index, dir_index = load_model(args.model_path + args.model_prefix)
+    print("Model loaded.")
 
     print('Load the paths and create the feature vectors...')
     x_y_vectors_test, X_test = load_paths(
@@ -246,10 +243,11 @@ def prediction(args, classifier, lemma_index, pos_index, dep_index, dir_index):
             #     print("Unknown hypernym in line %s: %s" % (i, hyper_hypo[1]))
             #     already_printed.add(hyper_hypo[1])
 
-            predicted = p[0]
-            prediction_score = p[1]
+            # predicted = p[0]
+            # prediction_score = p[1]
 
-            writer.writerow(test_set[hyper_hypo] + [predicted, prediction_score])
+            # writer.writerow(test_set[hyper_hypo] + [predicted, prediction_score])
+            writer.writerow(test_set[hyper_hypo] + [p])
 
     print("Finished writing result.")
 
@@ -281,23 +279,23 @@ def main():
     parser.add_argument('--dynet-seed', default=int(random.getrandbits(32)),
                         help="Seed for the dynet randomizer. Default: random integer value")
 
-    #subparser = parser.add_subparsers(dest="mode", help='Mode')
+    subparser = parser.add_subparsers(dest="mode", help='Mode')
 
-    #tp = subparser.add_parser("training", help="Train a model with a dataset.")
-    parser.add_argument('-d', '--dataset_path', default=script_path + 'dataset/datasets/dataset_rnd/')
-    parser.add_argument('-e', '--embeddings_file', default=script_path + 'embedding/glove.6B.50d.txt')
-    parser.add_argument('--epochs', default=3)
-    parser.add_argument('--alpha', default=0.001)
-    parser.add_argument('--word_dropout_rate', default=0.5)
-    parser.add_argument('--evaluate', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"),
+    tp = subparser.add_parser("training", help="Train a model with a dataset.")
+    tp.add_argument('-d', '--dataset_path', default=script_path + 'dataset/datasets/dataset_rnd/')
+    tp.add_argument('-e', '--embeddings_file', default=script_path + 'embedding/glove.6B.50d.txt')
+    tp.add_argument('--epochs', default=3)
+    tp.add_argument('--alpha', default=0.001)
+    tp.add_argument('--word_dropout_rate', default=0.5)
+    tp.add_argument('--evaluate', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"),
                     help='Calculate precision, recall and F1.')
 
-    #pp = subparser.add_parser("prediction", help="Use a trained model and predict hypernyms.")
-    parser.add_argument('-i', '--hype_file', required=True, help="CSV-file containing hypo/hyper-relations.")
-    parser.add_argument('-o', '--output_file', default=script_path + 'result.csv')
-    parser.add_argument('--csv_delimiter', default='\t')
-    parser.add_argument('--csv_has_header', default=False, type=lambda x: x.lower() in ("yes", "true", "t", "1"))
-    parser.add_argument('--csv_tuple_start_index', default=0, type=int,
+    pp = subparser.add_parser("prediction", help="Use a trained model and predict hypernyms.")
+    pp.add_argument('-i', '--hype_file', required=True, help="CSV-file containing hypo/hyper-relations.")
+    pp.add_argument('-o', '--output_file', default=script_path + 'result.csv')
+    pp.add_argument('--csv_delimiter', default='\t')
+    pp.add_argument('--csv_has_header', default=False, type=lambda x: x.lower() in ("yes", "true", "t", "1"))
+    pp.add_argument('--csv_tuple_start_index', default=0, type=int,
                     help="Sets the start index of hypo/hyper-relations in CSV-files (e.g. first column is an ID)")
 
     args = parser.parse_args()
@@ -324,18 +322,17 @@ def main():
     args.corpus_path = args.corpus_path + ("" if args.corpus_path.endswith("/") else "/")
     args.model_path = args.model_path + ("" if args.model_path.endswith("/") else "/")
 
-    #if args.mode == "training":
-    #    args.dataset_path = args.dataset_path + ("" if args.dataset_path.endswith("/") else "/")
-    #   training(args)
-    #elif args.mode == "prediction":
-    args.dataset_path = args.dataset_path + ("" if args.dataset_path.endswith("/") else "/")
-    classifier, lemma_index, pos_index, dep_index, dir_index = training(args)
-    prediction(args, classifier, lemma_index, pos_index, dep_index, dir_index)
-    #else:
-    #    print("Unknown mode '%s'." % args.mode)
+    if args.mode == "training":
+        args.dataset_path = args.dataset_path + ("" if args.dataset_path.endswith("/") else "/")
+        training(args)
+    elif args.mode == "prediction":
+        prediction(args)
+    else:
+        print("Unknown mode '%s'." % args.mode)
 
-    # predictions = prediction(args)
-    # save_predictions(args, predictions)
+
+# predictions = prediction(args)
+# save_predictions(args, predictions)
 
 
 if __name__ == '__main__':

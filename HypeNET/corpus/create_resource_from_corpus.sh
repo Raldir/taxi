@@ -85,16 +85,27 @@ do
 done
 wait
 
+
 echo "Third step - use the ID-based triplet file and converts it to the '_l2r.db' file..."
-for x in $(eval echo {$start..$end})
-do
-( awk -v OFS='\t' '{i[$0]++} END{for(x in i){print x, i[x]}}' "$directory/$(echo $wiki_dump_file)_"$x"_parsed_id" > $directory/id_triplet_file"_"$x ) &
-done
-wait
 
 echo "Concat temporary id-triplet files..."
+cat $directory/$wiki_dump_file"_"*"_parsed_id" > $directory/id_triplet_file_temp;
+
+echo "Sort temporary paths file."
+sort $directory/id_triplet_file_temp > $directory/id_triplet_file_temp_sorted
+
+echo "Number of triplets to sum: " $(wc -l $directory/id_triplet_file_temp_sorted | grep -o -w -E "[0-9]+")
+python count_triplets.py $directory/id_triplet_file_temp_sorted $directory/id_triplet_file
+
+#for x in $(eval echo {$start..$end})
+#do
+#( awk -v OFS='\t' '{i[$0]++} END{for(x in i){print x, i[x]}}' "$directory/$(echo $wiki_dump_file)_"$x"_parsed_id" > $directory/id_triplet_file"_"$x ) &
+#done
+#wait
+
+#echo "Concat temporary id-triplet files..."
 #cat $directory/id_triplet_file_* > $directory/id_triplet_file_temp;
-cat $directory/id_triplet_file_* > $directory/id_triplet_file;
+#cat $directory/id_triplet_file_* > $directory/id_triplet_file;
 
 #echo "Compute id-triplet files..."
 #for x in {0..4}
@@ -113,7 +124,7 @@ cat $directory/id_triplet_file_* > $directory/id_triplet_file;
 #echo "Concat id-triplet files..."
 #cat $directory/id_triplet_file_* > $directory/id_triplet_file;
 
-echo "Remove temporary id-triplet-files..."
+#echo "Remove temporary id-triplet-files..."
 #rm $directory/id_triplet_file_temp
 #rm $directory/id_triplet_file_*
 
