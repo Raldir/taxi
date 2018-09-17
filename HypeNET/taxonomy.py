@@ -27,19 +27,16 @@ def generate_keys(corpus, dataset_keys):
     for (x, y) in dataset_keys:
         id_x, id_y = corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))
 
-        if id_x == -1:
+        if id_x == -1 and x not in already_printed:
             unknown_words += 1
+            print("Unknown word: %s" % x)
 
-            if x not in already_printed:
-                print("Unknown word: %s" % x)
-                already_printed.add(x)
-
-        if id_y == -1:
+        if id_y == -1 and y not in already_printed:
             unknown_words += 1
+            print("Unknown word: %s" % y)
 
-            if y not in already_printed:
-                print("Unknown word: %s" % y)
-                already_printed.add(y)
+        already_printed.add(x)
+        already_printed.add(y)
 
         if id_x != -1 and id_y != -1:
             full_key += 1
@@ -47,17 +44,14 @@ def generate_keys(corpus, dataset_keys):
         keys.append((id_x, id_y))
 
     print("Found %s (%.2f%%) known terms and %s (%.2f%%) unknown terms in corpus with an input set of %s terms."
-          % (
-              len(dataset_keys) * 2 - unknown_words,
-              float(len(dataset_keys) * 2 - unknown_words) / float(len(dataset_keys) * 2) * 100.0,
-              unknown_words,
-              float(unknown_words) / float(len(dataset_keys) * 2) * 100.0,
-              len(dataset_keys) * 2)
-          )
+          % (len(already_printed) - unknown_words,
+             float(len(already_printed) - unknown_words) / float(len(already_printed)) * 100.0,
+             unknown_words,
+             float(unknown_words) / float(len(already_printed)) * 100.0,
+             len(already_printed)))
 
     print("Found %s full keysets of possible %s (%.2f%%)." % (
-        full_key, len(dataset_keys), float(full_key) / len(dataset_keys) * 100.0)
-          )
+        full_key, len(dataset_keys), float(full_key) / len(dataset_keys) * 100.0))
 
     return keys
 
@@ -179,7 +173,7 @@ def training(args):
     print("Training finished.")
 
     print("Save model to '%s' with prefix '%s'..." % (os.path.abspath(args.model_path), args.model_prefix))
-    # classifier.save_model(args.model_path + args.model_prefix, [lemma_index, pos_index, dep_index, dir_index])
+    classifier.save_model(args.model_path + args.model_prefix, [lemma_index, pos_index, dep_index, dir_index])
     print("Model saved.")
 
     print("Training task finished.")
@@ -224,7 +218,7 @@ def prediction(args):
     print("Done loading paths and feature vectors.")
 
     print('Start prediction...')
-    pred = classifier.predict(X_test, x_y_vectors=x_y_vectors_test, full_information=True)
+    pred = classifier.predict(X_test, x_y_vectors=x_y_vectors_test, full_information=args.include_score)
     print('Prediction finished.')
 
     print("Write result to: %s" % os.path.abspath(args.output_file))
@@ -247,7 +241,7 @@ def prediction(args):
             # prediction_score = p[1]
 
             # writer.writerow(test_set[hyper_hypo] + [predicted, prediction_score])
-            writer.writerow(test_set[hyper_hypo] + [p])
+            writer.writerow(test_set[hyper_hypo] + list(p))
 
     print("Finished writing result.")
 
@@ -293,6 +287,8 @@ def main():
     pp = subparser.add_parser("prediction", help="Use a trained model and predict hypernyms.")
     pp.add_argument('-i', '--hype_file', required=True, help="CSV-file containing hypo/hyper-relations.")
     pp.add_argument('-o', '--output_file', default=script_path + 'result.csv')
+    pp.add_argument('--include_score', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"),
+                    help="Includes the prediction score.")
     pp.add_argument('--csv_delimiter', default='\t')
     pp.add_argument('--csv_has_header', default=False, type=lambda x: x.lower() in ("yes", "true", "t", "1"))
     pp.add_argument('--csv_tuple_start_index', default=0, type=int,
