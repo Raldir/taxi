@@ -43,7 +43,7 @@ def generate_keys(corpus, dataset_keys):
 
         keys.append((id_x, id_y))
 
-    print("Found %s (%.2f%%) known terms and %s (%.2f%%) unknown terms in corpus with an input set of %s terms."
+    print("Found %s (%.2f%%) known terms and %s (%.2f%%) unknown terms in given dataset with an input set of %s terms."
           % (len(already_printed) - unknown_words,
              float(len(already_printed) - unknown_words) / float(len(already_printed)) * 100.0,
              unknown_words,
@@ -79,7 +79,8 @@ def load_paths(corpus_path, corpus_prefix, dataset_keys, lemma_index, pos_index,
     paths = paths_x_to_y
 
     empty = [dataset_keys[i] for i, path_list in enumerate(paths) if len(path_list.keys()) == 0]
-    print("Pairs without paths: %s, all dataset: %s" % (len(empty), len(dataset_keys)))
+    print("Found %s pairs without paths in a dataset of %s pairs (%.2f%%)."
+          % (len(empty), len(dataset_keys), float(len(empty)) / len(dataset_keys) * 100.0 ))
 
     # Get the word embeddings for x and y (get a lemma index)
     x_y_vectors = None \
@@ -218,32 +219,46 @@ def prediction(args):
     print("Done loading paths and feature vectors.")
 
     print('Start prediction...')
-    pred = classifier.predict(X_test, x_y_vectors=x_y_vectors_test, full_information=args.include_score)
+    pred = classifier.predict(X_test, x_y_vectors=x_y_vectors_test, full_information=True)
     print('Prediction finished.')
 
     print("Write result to: %s" % os.path.abspath(args.output_file))
+    count_positive_predictions = 0
+    count_printed_lines = 0
 
     with open(args.output_file, "w+") as f:
         writer = csv.writer(f, delimiter=args.csv_delimiter)
+        write_predictions = []
+
+        if args.write_predictions == 'all' or args.write_predictions == 'false':
+            write_predictions.append(0)
+
+        if args.write_predictions == 'all' or args.write_predictions == 'true':
+            write_predictions.append(1)
 
         for i, p in enumerate(pred):
             hyper_hypo = test_set_mapping[i]
+            predicted = p[0]
+            prediction_score = p[1]
 
-            # if hyper_hypo[0] not in already_printed and corpus.get_id_by_term(hyper_hypo[0]) == -1:
-            #     print("Unknown hyponym in line %s: %s" % (i, hyper_hypo[0]))
-            #     already_printed.add(hyper_hypo[0])
-            #
-            # if hyper_hypo[1] not in already_printed and corpus.get_id_by_term(hyper_hypo[1]) == -1:
-            #     print("Unknown hypernym in line %s: %s" % (i, hyper_hypo[1]))
-            #     already_printed.add(hyper_hypo[1])
+            if predicted == 1:
+                count_positive_predictions += 1
 
-            # predicted = p[0]
-            # prediction_score = p[1]
+            if predicted in write_predictions:
+                result = test_set[hyper_hypo]
 
-            # writer.writerow(test_set[hyper_hypo] + [predicted, prediction_score])
-            writer.writerow(test_set[hyper_hypo] + list(p))
+                if args.include_predictions:
+                    result.append(predicted)
 
-    print("Finished writing result.")
+                if args.include_scores:
+                    result.append(prediction_score)
+
+                writer.writerow(result)
+                count_printed_lines += 1
+
+    print("Finished writing result (%s lines)." % count_printed_lines)
+    print("   Positive predictions: %s" % count_positive_predictions)
+    print("   Negative predictions: %s" % (len(pred) - count_positive_predictions))
 
     print("Prediction task finished.")
 
@@ -287,8 +302,16 @@ def main():
     pp = subparser.add_parser("prediction", help="Use a trained model and predict hypernyms.")
     pp.add_argument('-i', '--hype_file', required=True, help="CSV-file containing hypo/hyper-relations.")
     pp.add_argument('-o', '--output_file', default=script_path + 'result.csv')
-    pp.add_argument('--include_score', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"),
-                    help="Includes the prediction score.")
+
+    pp.add_argument('--include_scores', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"),
+                    help="Includes the prediction score as new column.")
+
+    pp.add_argument('--include_predictions', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"),
+                    help="Includes the prediction (e.g. 1 or 0) as new column.")
+
+    pp.add_argument('--write_predictions', choices=['all', 'true', 'false'], default='all',
+                    help="Only writes lines predicted as true/false or write all (default).")
+
     pp.add_argument('--csv_delimiter', default='\t')
     pp.add_argument('--csv_has_header', default=False, type=lambda x: x.lower() in ("yes", "true", "t", "1"))
     pp.add_argument('--csv_tuple_start_index', default=0, type=int,
@@ -325,6 +348,8 @@ def main():
         prediction(args)
     else:
         print("Unknown mode '%s'." % args.mode)
+
+    print("FINISHED.")
 
 
 # predictions = prediction(args)
