@@ -16,15 +16,17 @@ from train.paths_lstm_classifier import PathLSTMClassifier
 EMBEDDINGS_DIM = 50
 
 
-def generate_keys(corpus, dataset_keys):
-    print("Generate keys...")
-    keys = []
+def isBool(x):
+    return str(x).lower() in ("yes", "true", "t", "1")
 
+
+def add_keys(corpus, dataset):
+    print("Generate keys...")
     already_printed = set([])
     unknown_words = 0
     full_key = 0
 
-    for (x, y) in dataset_keys:
+    for (x, y) in dataset:
         id_x, id_y = corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))
 
         if id_x == -1 and x not in already_printed:
@@ -41,7 +43,7 @@ def generate_keys(corpus, dataset_keys):
         if id_x != -1 and id_y != -1:
             full_key += 1
 
-        keys.append((id_x, id_y))
+        dataset[(x, y)]["keys"] = (id_x, id_y)
 
     print("Found %s (%.2f%%) known terms and %s (%.2f%%) unknown terms in given dataset with an input set of %s terms."
           % (len(already_printed) - unknown_words,
@@ -51,41 +53,62 @@ def generate_keys(corpus, dataset_keys):
              len(already_printed)))
 
     print("Found %s full keysets of possible %s (%.2f%%)." % (
-        full_key, len(dataset_keys), float(full_key) / len(dataset_keys) * 100.0))
-
-    return keys
+        full_key, len(dataset), float(full_key) / len(dataset) * 100.0))
 
 
-def load_paths(corpus_path, corpus_prefix, dataset_keys, lemma_index, pos_index, dep_index, dir_index, path_based=True):
-    """
-    Override load_paths from lstm_common to include (x, y) vectors
-    :param corpus_prefix:
-    :param dataset_keys:
-    :return:
-    """
-    print("Load corpus from '%s' with prefix '%s'..." % (os.path.abspath(corpus_path), corpus_prefix))
-    corpus = KnowledgeResource(corpus_path + corpus_prefix)
+def add_paths(corpus, dataset, lemma_index, pos_index, dep_index, dir_index):
+    print("Generate paths...")
+
+    for (x, y) in dataset:
+        keys = dataset[(x, y)]["keys"]
+        paths = get_paths(corpus, keys[0], keys[1])
+        vectorize_paths = {}
+
+        for path, count in paths.iteritems():
+            vectorize_paths[vectorize_path(path, lemma_index, pos_index, dep_index, dir_index)] = count
+
+        dataset[(x, y)]["dependency_paths"] = paths
+        dataset[(x, y)]["paths"] = vectorize_paths
+
+    # keys = [(corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))) for (x, y) in dataset.keys()]
+    # paths_x_to_y = [{vectorize_path(path, lemma_index, pos_index, dep_index, dir_index): count
+    #                for path, count in get_paths(corpus, x_id, y_id).iteritems()}
+    #               for (x_id, y_id) in keys]
+    # paths_x_to_y = [{p: c for p, c in paths_x_to_y[i].iteritems() if p is not None} for i in range(len(keys))]
+
+
+def load_paths(dataset, lemma_index, pos_index, dep_index, dir_index, args):
+    print("Load corpus from '%s' with prefix '%s'..." % (os.path.abspath(args.corpus_path), args.corpus_prefix))
+    corpus = KnowledgeResource(args.corpus_path + args.corpus_prefix)
     print('Corpus loaded.')
 
-    keys = generate_keys(corpus, dataset_keys)
-    # keys = [(corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))) for (x, y) in dataset_keys]
+    add_keys(corpus, dataset)
+    add_paths(corpus, dataset, lemma_index, pos_index, dep_index, dir_index)
 
-    print("Generate paths...")
-    paths_x_to_y = [{vectorize_path(path, lemma_index, pos_index, dep_index, dir_index): count
-                     for path, count in get_paths(corpus, x_id, y_id).iteritems()}
-                    for (x_id, y_id) in keys]
-    paths_x_to_y = [{p: c for p, c in paths_x_to_y[i].iteritems() if p is not None} for i in range(len(keys))]
+    clean_dataset = {}
+    count_empty = 0
 
-    paths = paths_x_to_y
+    for (x, y) in dataset:
+        path_list = dataset[(x, y)]["paths"]
 
-    empty = [dataset_keys[i] for i, path_list in enumerate(paths) if len(path_list.keys()) == 0]
-    print("Found %s pairs without paths in a dataset of %s pairs (%.2f%%)."
-          % (len(empty), len(dataset_keys), float(len(empty)) / len(dataset_keys) * 100.0 ))
+        if len(path_list.keys()) == 0:
+            count_empty += 1
 
-    # Get the word embeddings for x and y (get a lemma index)
-    x_y_vectors = None \
-        if path_based \
-        else [(lemma_index.get(x, 0), lemma_index.get(y, 0)) for (x, y) in dataset_keys]
+        if not args.only_with_paths or len(path_list.keys()) > 0:
+            clean_dataset[(x, y)] = dataset[(x, y)]
+            clean_dataset[(x, y)]["x_y_vectors"] = None \
+                if args.path_based \
+                else (lemma_index.get(x, 0), lemma_index.get(y, 0))
+
+    print("Found %s pairs with paths (%s without) in a dataset of %s pairs (%.2f%%)." %
+          (len(dataset) - count_empty, count_empty, len(dataset),
+           float(len(dataset) - count_empty) / len(dataset) * 100.0))
+
+    ## Get the word embeddings for x and y (get a lemma index)
+    # x_y_vectors = None \
+    #    if args.path_based \
+    #    else [(lemma_index.get(x, 0), lemma_index.get(y, 0)) for (x, y) in dataset
+    #          if dataset[(x, y)]["index"] is not None]
 
     print('Done loading paths:')
     print('   Number of lemmas: %d' % len(lemma_index))
@@ -93,7 +116,7 @@ def load_paths(corpus_path, corpus_prefix, dataset_keys, lemma_index, pos_index,
     print('   Number of dependency labels: %d' % len(dep_index))
     print('   Number of directions: %d' % len(dir_index))
 
-    return x_y_vectors, paths
+    return clean_dataset
 
 
 def training(args):
@@ -103,11 +126,14 @@ def training(args):
     train_set = load_dataset(args.dataset_path + 'train.tsv')
     test_set = load_dataset(args.dataset_path + 'test.tsv')
     val_set = load_dataset(args.dataset_path + 'val.tsv')
-    y_train = [1 if 'True' in train_set[key] else 0 for key in train_set.keys()]
-    y_test = [1 if 'True' in test_set[key] else 0 for key in test_set.keys()]
+    # y_train = [1 if 'True' in train_set[key] else 0 for key in train_set.keys()]
+    # y_test = [1 if 'True' in test_set[key] else 0 for key in test_set.keys()]
     # Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
     # y_val = [1 if 'True' in val_set[key] else 0 for key in val_set.keys()]
-    dataset_keys = train_set.keys() + test_set.keys() + val_set.keys()
+    dataset = {}
+    dataset.update({keys: {"data": 1 if isBool(train_set[keys]) else 0, "type": "train_set"} for keys in train_set})
+    dataset.update({keys: {"data": 1 if isBool(test_set[keys]) else 0, "type": "test_set"} for keys in test_set})
+    dataset.update({keys: {"data": 1 if isBool(val_set[keys]) else 0, "type": "val_set"} for keys in val_set})
     print('Done loading dataset')
 
     print("Initializing word embeddings with file '%s'..." % os.path.abspath(args.embeddings_file))
@@ -124,29 +150,49 @@ def training(args):
     dummy = dir_index['#UNKNOWN#']
 
     print('Load the paths and create the feature vectors...')
-    x_y_vectors, dataset_instances = load_paths(
-        args.corpus_path,
-        args.corpus_prefix,
-        dataset_keys,
+    cleaned_dataset = load_paths(
+        dataset,
         lemma_index,
         pos_index,
         dep_index,
         dir_index,
-        args.path_based
+        args
     )
     print("Done loading paths and feature vectors.")
 
-    print("Generate training set...")
-    X_train = dataset_instances[:len(train_set)]
-    X_test = dataset_instances[len(train_set):len(train_set) + len(test_set)]
-    # Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
-    # X_val = dataset_instances[len(train_set)+len(test_set):]
+    print("Generate training/test set...")
+    X_train = []
+    Y_train = []
+    x_y_vectors_train = None if args.path_based else []
+    X_test = []
+    Y_test = []
+    x_y_vectors_test = None if args.path_based else []
 
-    x_y_vectors_train = None if x_y_vectors is None else x_y_vectors[:len(train_set)]
-    x_y_vectors_test = None if x_y_vectors is None else x_y_vectors[len(train_set):len(train_set) + len(test_set)]
-    # Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
-    # x_y_vectors_val = x_y_vectors[len(train_set)+len(test_set):]
-    print("Training set generated.")
+    for keys in cleaned_dataset:
+        if cleaned_dataset[keys]["type"] == "train_set":
+            X_train.append(cleaned_dataset[keys]["paths"])
+            Y_train.append(cleaned_dataset[keys]["data"])
+
+            if x_y_vectors_train is not None:
+                x_y_vectors_train.append(cleaned_dataset[keys]["x_y_vectors"])
+        elif cleaned_dataset[keys]["type"] == "test_set":
+            X_test.append(cleaned_dataset[keys]["paths"])
+            Y_test.append(cleaned_dataset[keys]["data"])
+
+            if x_y_vectors_test is not None:
+                x_y_vectors_test.append(cleaned_dataset[keys]["x_y_vectors"])
+
+    # X_train = dataset_instances[:len(train_set)]
+    # X_test = dataset_instances[len(train_set):len(train_set) + len(test_set)]
+    ## Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
+    ## X_val = dataset_instances[len(train_set)+len(test_set):]
+
+    # x_y_vectors_train = None if x_y_vectors is None else x_y_vectors[:len(train_set)]
+    # x_y_vectors_test = None if x_y_vectors is None else x_y_vectors[len(train_set):len(train_set) + len(test_set)]
+    ## Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
+    ## x_y_vectors_val = x_y_vectors[len(train_set)+len(test_set):]
+
+    print("Training/test set generated.")
 
     print('Create the classifier...')
     classifier = PathLSTMClassifier(num_lemmas=len(lemma_index),
@@ -158,17 +204,17 @@ def training(args):
                                     lemma_embeddings=wv,
                                     dropout=args.word_dropout_rate,
                                     alpha=args.alpha,
-                                    use_xy_embeddings=x_y_vectors is not None)
+                                    use_xy_embeddings=not args.path_based)
     print('Classifier created.')
 
     print('Training with learning rate = %f, dropout = %f...' % (args.alpha, args.word_dropout_rate))
-    classifier.fit(X_train, y_train, x_y_vectors=x_y_vectors_train)
+    classifier.fit(X_train, Y_train, x_y_vectors=x_y_vectors_train)
     print('Classifier finished training.')
 
     if args.evaluate:
         print('Evaluation:')
         pred = classifier.predict(X_test, x_y_vectors=x_y_vectors_test)
-        p, r, f1, support = precision_recall_fscore_support(y_test, pred, average='binary')
+        p, r, f1, support = precision_recall_fscore_support(Y_test, pred, average='binary')
         print('Precision: %.3f, Recall: %.3f, F1: %.3f' % (p, r, f1))
 
     print("Training finished.")
@@ -185,7 +231,6 @@ def prediction(args):
 
     print("Loading the dataset from file '%s'..." % args.hype_file)
     test_set = {}
-    test_set_mapping = []
     with open(args.hype_file, "r") as f:
         reader = csv.reader(f, delimiter=args.csv_delimiter)
 
@@ -194,8 +239,9 @@ def prediction(args):
             if not args.csv_has_header or i > 0:
                 key = line[args.csv_tuple_start_index:args.csv_tuple_start_index + 2]
 
-                test_set[tuple(key)] = line
-                test_set_mapping.append(tuple(key))
+                test_set[tuple(key)] = {
+                    "data": line
+                }
 
     print("Dummy dataset print: %s" % test_set.keys()[
                                       0: min(len(test_set.keys()), 5)])  # Print first 5 entries if possible
@@ -206,25 +252,39 @@ def prediction(args):
     print("Model loaded.")
 
     print('Load the paths and create the feature vectors...')
-    x_y_vectors_test, X_test = load_paths(
-        args.corpus_path,
-        args.corpus_prefix,
-        test_set.keys(),
+    cleaned_dataset = load_paths(
+        test_set,
         lemma_index,
         pos_index,
         dep_index,
         dir_index,
-        args.path_based
+        args
     )
     print("Done loading paths and feature vectors.")
+
+    print("Generate dataset...")
+    X_test = []
+    x_y_vectors_test = None if args.path_based else []
+
+    for keys in cleaned_dataset:
+        cleaned_dataset[keys]["pred_index"] = len(X_test)
+        X_test.append(cleaned_dataset[keys]["paths"])
+
+        if x_y_vectors_test is not None:
+            x_y_vectors_test.append(cleaned_dataset[keys]["x_y_vectors"])
+    print("Done generating dataset.")
 
     print('Start prediction...')
     pred = classifier.predict(X_test, x_y_vectors=x_y_vectors_test, full_information=True)
     print('Prediction finished.')
 
     print("Write result to: %s" % os.path.abspath(args.output_file))
-    count_positive_predictions = 0
-    count_printed_lines = 0
+    c_printed_lines = 0
+    c_positive = 0
+    tp = 0
+    tn = 0
+    fp = 0
+    fn = 0
 
     with open(args.output_file, "w+") as f:
         writer = csv.writer(f, delimiter=args.csv_delimiter)
@@ -236,16 +296,13 @@ def prediction(args):
         if args.write_predictions == 'all' or args.write_predictions == 'true':
             write_predictions.append(1)
 
-        for i, p in enumerate(pred):
-            hyper_hypo = test_set_mapping[i]
-            predicted = p[0]
-            prediction_score = p[1]
-
-            if predicted == 1:
-                count_positive_predictions += 1
+        for (x, y) in cleaned_dataset:
+            pred_index = cleaned_dataset[(x, y)]["pred_index"]
+            predicted = pred[pred_index][0]
+            prediction_score = pred[pred_index][1]
 
             if predicted in write_predictions:
-                result = test_set[hyper_hypo]
+                result = test_set[(x, y)]["data"]
 
                 if args.include_predictions:
                     result.append(predicted)
@@ -253,14 +310,85 @@ def prediction(args):
                 if args.include_scores:
                     result.append(prediction_score)
 
+                if args.validation_label_index is not None:
+                    # - 2 because of the hypo/hyper-tuple which; label is expected after relation tuple
+                    expected = test_set[(x, y)]["data"][args.validation_label_index]
+                    c_positive += 1 if isBool(expected) else 0
+                    tp += 1 if isBool(expected) and isBool(predicted) else 0
+                    tn += 1 if not isBool(expected) and not isBool(predicted) else 0
+                    fp += 1 if not isBool(expected) and isBool(predicted) else 0
+                    fn += 1 if isBool(expected) and not isBool(predicted) else 0
+
                 writer.writerow(result)
-                count_printed_lines += 1
+                c_printed_lines += 1
 
-    print("Finished writing result (%s lines)." % count_printed_lines)
-    print("   Positive predictions: %s" % count_positive_predictions)
-    print("   Negative predictions: %s" % (len(pred) - count_positive_predictions))
+    print("Finished writing result (%s lines)." % c_printed_lines)
 
-    print("Prediction task finished.")
+    if args.validation_label_index is not None:
+        # print("+----------+----------+----------+----------+")
+        # print("|          | Positive | Negative |    Sum   |")
+        # print("+----------+----------+----------+----------+")
+        # print("| Positive |          |          |          |")
+        # print("+----------+----------+----------+----------+")
+        # print("| Negative |          |          |          |")
+        # print("+----------+----------+----------+----------+")
+        l_tp = len(str(tp))
+        l_tn = len(str(tn))
+        l_fp = len(str(fp))
+        l_fn = len(str(fn))
+        l_sum_p = len(str(tp + fp))
+        l_sum_n = len(str(tn + fn))
+
+        max_length = max(l_tp, l_tn, l_fp, l_fn, l_sum_p, l_sum_n, len("Positive"), len("true \ pred")) + 2
+        table = "   "
+        table += ("+" + ("-" * max_length)) * 4 + "+\n   "
+
+        table += "| true \ pred" + (" " * (max_length - len("true \ pred") - 1)) \
+                 + "| Positive" + (" " * (max_length - len("Positive") - 1)) \
+                 + "| Negative" + (" " * (max_length - len("Negative") - 1)) \
+                 + "| Sum" + (" " * (max_length - len("Sum") - 1)) \
+                 + "|\n   "
+
+        table += ("+" + ("-" * max_length)) * 4 + "+\n   "
+
+        table += "| Positive" + (" " * (max_length - len("Positive") - 1)) \
+                 + "| " + str(tp) + (" " * (max_length - l_tp - 1)) \
+                 + "| " + str(fp) + (" " * (max_length - l_fp - 1)) \
+                 + "| " + str(tp + fp) + (" " * (max_length - l_sum_p - 1)) \
+                 + "|\n   "
+
+        table += ("+" + ("-" * max_length)) * 4 + "+\n   "
+
+        table += "| Negative" + (" " * (max_length - len("Negative") - 1)) \
+                 + "| " + str(fn) + (" " * (max_length - l_fn - 1)) \
+                 + "| " + str(tn) + (" " * (max_length - l_tn - 1)) \
+                 + "| " + str(fn + tn) + (" " * (max_length - l_sum_n - 1)) \
+                 + "|\n   "
+
+        table += ("+" + ("-" * max_length)) * 4 + "+"
+
+        div = lambda x, y: float(x) / float(y) * 100.0 if y else 0
+        print('Validation:')
+        print(table)
+        print("")
+        print("   TP: %s" % tp)
+        print("   FN: %s" % fn)
+        print("   TN: %s" % tn)
+        print("   FP: %s" % fp)
+        print("")
+        print("   Positive labeled: %s (%.3f%%)" % (c_positive, div(c_positive, len(pred))))
+        print("   Negative labeled: %s (%.3f%%)" % (len(pred) - c_positive, div(len(pred) - c_positive, len(pred))))
+        print("")
+        print("   Positive predicted values: %.3f%%" % div(tp, tp + fp))
+        print("   Negative predicted values: %.3f%%" % div(tn, tn + fn))
+        print("")
+        print("   Recall   : %.3f%%" % div(tp, tp + fn))
+        print("   Precision: %.3f%%" % div(tp, tp + fp))
+        print("")
+        print("   Error rate: %.3f%%" % div(fn + fp, tp + fp + fn + tn))
+        print("   Accuracy  : %.3f%%" % div(tp + tn, tp + fp + fn + tn))
+
+        print("Prediction task finished.")
 
 
 def main():
@@ -278,8 +406,9 @@ def main():
     parser.add_argument('-mp', '--model_prefix', default='wiki_model',
                         help="Prefix of the model files. Default: wiki_model")
 
-    parser.add_argument('--path_based', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"),
-                        help="Path based analyses. Default: true")
+    parser.add_argument('--path_based', default=True, type=isBool, help="Path based analyses. Default: True")
+    parser.add_argument('--only_with_paths', action='store_true',
+                        help="Throws out term-pairs with zero paths. Default: False")
 
     parser.add_argument('--seed', default=int(random.getrandbits(32)),
                         help="Seed for the numpy randomizer. Default: random integer value")
@@ -296,26 +425,23 @@ def main():
     tp.add_argument('--epochs', default=3)
     tp.add_argument('--alpha', default=0.001)
     tp.add_argument('--word_dropout_rate', default=0.5)
-    tp.add_argument('--evaluate', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"),
-                    help='Calculate precision, recall and F1.')
+    tp.add_argument('--evaluate', default=True, type=isBool, help='Calculate precision, recall and F1.')
 
     pp = subparser.add_parser("prediction", help="Use a trained model and predict hypernyms.")
     pp.add_argument('-i', '--hype_file', required=True, help="CSV-file containing hypo/hyper-relations.")
     pp.add_argument('-o', '--output_file', default=script_path + 'result.csv')
-
-    pp.add_argument('--include_scores', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"),
+    pp.add_argument('--include_scores', default=True, type=isBool,
                     help="Includes the prediction score as new column.")
-
-    pp.add_argument('--include_predictions', default=True, type=lambda x: x.lower() in ("yes", "true", "t", "1"),
+    pp.add_argument('--include_predictions', default=True, type=isBool,
                     help="Includes the prediction (e.g. 1 or 0) as new column.")
-
     pp.add_argument('--write_predictions', choices=['all', 'true', 'false'], default='all',
                     help="Only writes lines predicted as true/false or write all (default).")
-
     pp.add_argument('--csv_delimiter', default='\t')
-    pp.add_argument('--csv_has_header', default=False, type=lambda x: x.lower() in ("yes", "true", "t", "1"))
+    pp.add_argument('--csv_has_header', default=False, type=isBool)
     pp.add_argument('--csv_tuple_start_index', default=0, type=int,
                     help="Sets the start index of hypo/hyper-relations in CSV-files (e.g. first column is an ID)")
+    pp.add_argument('--validation_label_index', default=None, type=int,
+                    help="If set, column in CSV-file containing label for hypo/hyper-relation will be validated.")
 
     args = parser.parse_args()
     print("Starting with arguments:")
