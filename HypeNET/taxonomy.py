@@ -59,7 +59,7 @@ def add_keys(corpus, dataset):
 def add_paths(corpus, dataset, lemma_index, pos_index, dep_index, dir_index):
     print("Generate paths...")
 
-    for (x, y) in dataset:
+    for i, (x, y) in enumerate(dataset):
         keys = dataset[(x, y)]["keys"]
         paths = get_paths(corpus, keys[0], keys[1])
         vectorize_paths = {}
@@ -70,11 +70,16 @@ def add_paths(corpus, dataset, lemma_index, pos_index, dep_index, dir_index):
         dataset[(x, y)]["dependency_paths"] = paths
         dataset[(x, y)]["paths"] = vectorize_paths
 
+        if (i + 1) % (len(dataset) / 10) == 0: # Print current state 10 times
+            print("   %s / %s" % (i, len(dataset)))
+
     # keys = [(corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))) for (x, y) in dataset.keys()]
     # paths_x_to_y = [{vectorize_path(path, lemma_index, pos_index, dep_index, dir_index): count
     #                for path, count in get_paths(corpus, x_id, y_id).iteritems()}
     #               for (x_id, y_id) in keys]
     # paths_x_to_y = [{p: c for p, c in paths_x_to_y[i].iteritems() if p is not None} for i in range(len(keys))]
+
+    print("Paths generated.")
 
 
 def load_paths(dataset, lemma_index, pos_index, dep_index, dir_index, args):
@@ -100,7 +105,7 @@ def load_paths(dataset, lemma_index, pos_index, dep_index, dir_index, args):
                 if args.path_based \
                 else (lemma_index.get(x, 0), lemma_index.get(y, 0))
 
-    print("Found %s pairs with paths (%s without) in a dataset of %s pairs (%.2f%%)." %
+    print("Found %s pairs with and %s without paths in a dataset of %s pairs (%.2f%% found)." %
           (len(dataset) - count_empty, count_empty, len(dataset),
            float(len(dataset) - count_empty) / len(dataset) * 100.0))
 
@@ -116,6 +121,7 @@ def load_paths(dataset, lemma_index, pos_index, dep_index, dir_index, args):
     print('   Number of dependency labels: %d' % len(dep_index))
     print('   Number of directions: %d' % len(dir_index))
 
+    print("Returning %s entries of processed dataset." % len(clean_dataset))
     return clean_dataset
 
 
@@ -302,7 +308,7 @@ def prediction(args):
             prediction_score = pred[pred_index][1]
 
             if predicted in write_predictions:
-                result = test_set[(x, y)]["data"]
+                result = cleaned_dataset[(x, y)]["data"]
 
                 if args.include_predictions:
                     result.append(predicted)
@@ -312,7 +318,7 @@ def prediction(args):
 
                 if args.validation_label_index is not None:
                     # - 2 because of the hypo/hyper-tuple which; label is expected after relation tuple
-                    expected = test_set[(x, y)]["data"][args.validation_label_index]
+                    expected = cleaned_dataset[(x, y)]["data"][args.validation_label_index]
                     c_positive += 1 if isBool(expected) else 0
                     tp += 1 if isBool(expected) and isBool(predicted) else 0
                     tn += 1 if not isBool(expected) and not isBool(predicted) else 0
