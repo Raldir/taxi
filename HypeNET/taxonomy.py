@@ -70,7 +70,7 @@ def add_paths(corpus, dataset, lemma_index, pos_index, dep_index, dir_index):
             if path is None:
                 print("   Path of %s / %s is none." % (x, y))
             elif vectorized_path is None:
-                print("   Vectorized path of %s / %s is none." % (x, y))
+                print("   Vectorized path of %s / %s is none, but path not: %s" % (x, y, path))
             else:
                 vectorize_paths[vectorized_path] = count
 
