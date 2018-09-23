@@ -263,18 +263,21 @@ def train(builder, model, model_parameters, X_train, y_train, nepochs, alpha=0.0
         epoch_indices = np.random.permutation(len(y_train))
 
         for minibatch in range(nminibatches):
-            path_cache = {}
-            batch_indices = epoch_indices[minibatch * minibatch_size:(minibatch + 1) * minibatch_size]
+            try:
+                path_cache = {}
+                batch_indices = epoch_indices[minibatch * minibatch_size:(minibatch + 1) * minibatch_size]
 
-            renew_cg()
-            loss = esum([-log(pick(
-                process_one_instance(builder, model, model_parameters, X_train[batch_indices[i]], path_cache, update,
-                                     dropout,
-                                     x_y_vectors=x_y_vectors[batch_indices[i]] if x_y_vectors is not None else None),
-                y_train[batch_indices[i]])) for i in range(minibatch_size)])
-            total_loss += loss.value()  # forward computation
-            loss.backward()
-            trainer.update()
+                renew_cg()
+                loss = esum([-log(pick(
+                    process_one_instance(builder, model, model_parameters, X_train[batch_indices[i]], path_cache, update,
+                                         dropout,
+                                         x_y_vectors=x_y_vectors[batch_indices[i]] if x_y_vectors is not None else None),
+                    y_train[batch_indices[i]])) for i in range(minibatch_size)])
+                total_loss += loss.value()  # forward computation
+                loss.backward()
+                trainer.update()
+            except Exception as e:
+                print("ERROR while training: %s" % e)
 
         # trainer.update_epoch()
         total_loss /= len(y_train)

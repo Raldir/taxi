@@ -175,7 +175,7 @@ def training(args):
     x_y_vectors_test = None if args.path_based else []
 
     for keys in cleaned_dataset:
-        if cleaned_dataset[keys]["paths"] is None:
+        if cleaned_dataset[keys]["paths"] is None or len(cleaned_dataset[keys]["paths"]) == 0:
             print("   Hypo/Hyper %s has None-path." % keys)
 
         if cleaned_dataset[keys]["data"] is None:
