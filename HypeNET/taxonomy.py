@@ -70,7 +70,7 @@ def add_paths(corpus, dataset, lemma_index, pos_index, dep_index, dir_index):
         dataset[(x, y)]["dependency_paths"] = paths
         dataset[(x, y)]["paths"] = vectorize_paths
 
-        if (i + 1) % (len(dataset) / 10) == 0: # Print current state 10 times
+        if (i + 1) % (len(dataset) / 10) == 0:  # Print current state 10 times
             print("   %s / %s" % (i, len(dataset)))
 
     # keys = [(corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))) for (x, y) in dataset.keys()]
@@ -175,6 +175,12 @@ def training(args):
     x_y_vectors_test = None if args.path_based else []
 
     for keys in cleaned_dataset:
+        if cleaned_dataset[keys]["paths"] is None:
+            print("   Hypo/Hyper %s has None-path." % keys)
+
+        if cleaned_dataset[keys]["data"] is None:
+            print("   Hypo/Hyper %s has None-data." % keys)
+
         if cleaned_dataset[keys]["type"] == "train_set":
             X_train.append(cleaned_dataset[keys]["paths"])
             Y_train.append(cleaned_dataset[keys]["data"])
