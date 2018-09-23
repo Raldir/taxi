@@ -197,8 +197,11 @@ def training(args):
     # x_y_vectors_test = None if x_y_vectors is None else x_y_vectors[len(train_set):len(train_set) + len(test_set)]
     ## Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
     ## x_y_vectors_val = x_y_vectors[len(train_set)+len(test_set):]
-
     print("Training/test set generated.")
+    print("   Training set: %s" % len(X_train))
+    print("   Embeddings training: %s" % ("/" if x_y_vectors_train is None else str(len(x_y_vectors_train))))
+    print("   Test set: %s" % len(X_test))
+    print("   Embeddings test: %s" % ("/" if x_y_vectors_test is None else str(len(x_y_vectors_test))))
 
     print('Create the classifier...')
     classifier = PathLSTMClassifier(num_lemmas=len(lemma_index),
