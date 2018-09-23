@@ -16,7 +16,7 @@ from train.paths_lstm_classifier import PathLSTMClassifier
 EMBEDDINGS_DIM = 50
 
 
-def isBool(x):
+def is_bool(x):
     return str(x).lower() in ("yes", "true", "t", "1")
 
 
@@ -109,7 +109,7 @@ def load_paths(dataset, lemma_index, pos_index, dep_index, dir_index, args):
           (len(dataset) - count_empty, count_empty, len(dataset),
            float(len(dataset) - count_empty) / len(dataset) * 100.0))
 
-    ## Get the word embeddings for x and y (get a lemma index)
+    # Get the word embeddings for x and y (get a lemma index)
     # x_y_vectors = None \
     #    if args.path_based \
     #    else [(lemma_index.get(x, 0), lemma_index.get(y, 0)) for (x, y) in dataset
@@ -137,9 +137,9 @@ def training(args):
     # Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
     # y_val = [1 if 'True' in val_set[key] else 0 for key in val_set.keys()]
     dataset = {}
-    dataset.update({keys: {"data": 1 if isBool(train_set[keys]) else 0, "type": "train_set"} for keys in train_set})
-    dataset.update({keys: {"data": 1 if isBool(test_set[keys]) else 0, "type": "test_set"} for keys in test_set})
-    dataset.update({keys: {"data": 1 if isBool(val_set[keys]) else 0, "type": "val_set"} for keys in val_set})
+    dataset.update({keys: {"data": 1 if is_bool(train_set[keys]) else 0, "type": "train_set"} for keys in train_set})
+    dataset.update({keys: {"data": 1 if is_bool(test_set[keys]) else 0, "type": "test_set"} for keys in test_set})
+    dataset.update({keys: {"data": 1 if is_bool(val_set[keys]) else 0, "type": "val_set"} for keys in val_set})
     print('Done loading dataset')
 
     print("Initializing word embeddings with file '%s'..." % os.path.abspath(args.embeddings_file))
@@ -167,46 +167,46 @@ def training(args):
     print("Done loading paths and feature vectors.")
 
     print("Generate training/test set...")
-    X_train = []
-    Y_train = []
+    x_train = []
+    y_train = []
     x_y_vectors_train = None if args.path_based else []
-    X_test = []
-    Y_test = []
+    x_test = []
+    y_test = []
     x_y_vectors_test = None if args.path_based else []
 
-    for keys in cleaned_dataset:
-        if cleaned_dataset[keys]["paths"] is None or len(cleaned_dataset[keys]["paths"]) == 0:
-            print("   Hypo/Hyper %s has None-path." % keys)
+    for (x, y) in cleaned_dataset:
+        if cleaned_dataset[(x, y)]["paths"] is None or len(cleaned_dataset[(x, y)]["paths"]) == 0:
+            print("   %s / %s has None-path." % (x, y))
 
-        if cleaned_dataset[keys]["data"] is None:
-            print("   Hypo/Hyper %s has None-data." % keys)
+        if cleaned_dataset[(x, y)]["data"] is None:
+            print("   %s / %s has None-data." % (x, y))
 
-        if cleaned_dataset[keys]["type"] == "train_set":
-            X_train.append(cleaned_dataset[keys]["paths"])
-            Y_train.append(cleaned_dataset[keys]["data"])
+        if cleaned_dataset[(x, y)]["type"] == "train_set":
+            x_train.append(cleaned_dataset[(x, y)]["paths"])
+            y_train.append(cleaned_dataset[(x, y)]["data"])
 
             if x_y_vectors_train is not None:
-                x_y_vectors_train.append(cleaned_dataset[keys]["x_y_vectors"])
-        elif cleaned_dataset[keys]["type"] == "test_set":
-            X_test.append(cleaned_dataset[keys]["paths"])
-            Y_test.append(cleaned_dataset[keys]["data"])
+                x_y_vectors_train.append(cleaned_dataset[(x, y)]["x_y_vectors"])
+        elif cleaned_dataset[(x, y)]["type"] == "test_set":
+            x_test.append(cleaned_dataset[(x, y)]["paths"])
+            y_test.append(cleaned_dataset[(x, y)]["data"])
 
             if x_y_vectors_test is not None:
-                x_y_vectors_test.append(cleaned_dataset[keys]["x_y_vectors"])
+                x_y_vectors_test.append(cleaned_dataset[(x, y)]["x_y_vectors"])
 
     # X_train = dataset_instances[:len(train_set)]
     # X_test = dataset_instances[len(train_set):len(train_set) + len(test_set)]
-    ## Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
-    ## X_val = dataset_instances[len(train_set)+len(test_set):]
+    # Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
+    # X_val = dataset_instances[len(train_set)+len(test_set):]
 
     # x_y_vectors_train = None if x_y_vectors is None else x_y_vectors[:len(train_set)]
     # x_y_vectors_test = None if x_y_vectors is None else x_y_vectors[len(train_set):len(train_set) + len(test_set)]
-    ## Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
-    ## x_y_vectors_val = x_y_vectors[len(train_set)+len(test_set):]
+    # Uncomment if you'd like to load the validation set (e.g. to tune the hyper-parameters)
+    # x_y_vectors_val = x_y_vectors[len(train_set)+len(test_set):]
     print("Training/test set generated.")
-    print("   Training set: %s" % len(X_train))
+    print("   Training set: %s" % len(x_train))
     print("   Embeddings training: %s" % ("/" if x_y_vectors_train is None else str(len(x_y_vectors_train))))
-    print("   Test set: %s" % len(X_test))
+    print("   Test set: %s" % len(x_test))
     print("   Embeddings test: %s" % ("/" if x_y_vectors_test is None else str(len(x_y_vectors_test))))
 
     print('Create the classifier...')
@@ -223,13 +223,13 @@ def training(args):
     print('Classifier created.')
 
     print('Training with learning rate = %f, dropout = %f...' % (args.alpha, args.word_dropout_rate))
-    classifier.fit(X_train, Y_train, x_y_vectors=x_y_vectors_train)
+    classifier.fit(x_train, y_train, x_y_vectors=x_y_vectors_train)
     print('Classifier finished training.')
 
     if args.evaluate:
         print('Evaluation:')
-        pred = classifier.predict(X_test, x_y_vectors=x_y_vectors_test)
-        p, r, f1, support = precision_recall_fscore_support(Y_test, pred, average='binary')
+        pred = classifier.predict(x_test, x_y_vectors=x_y_vectors_test)
+        p, r, f1, support = precision_recall_fscore_support(y_test, pred, average='binary')
         print('Precision: %.3f, Recall: %.3f, F1: %.3f' % (p, r, f1))
 
     print("Training finished.")
@@ -278,19 +278,19 @@ def prediction(args):
     print("Done loading paths and feature vectors.")
 
     print("Generate dataset...")
-    X_test = []
+    x_test = []
     x_y_vectors_test = None if args.path_based else []
 
     for keys in cleaned_dataset:
-        cleaned_dataset[keys]["pred_index"] = len(X_test)
-        X_test.append(cleaned_dataset[keys]["paths"])
+        cleaned_dataset[keys]["pred_index"] = len(x_test)
+        x_test.append(cleaned_dataset[keys]["paths"])
 
         if x_y_vectors_test is not None:
             x_y_vectors_test.append(cleaned_dataset[keys]["x_y_vectors"])
     print("Done generating dataset.")
 
     print('Start prediction...')
-    pred = classifier.predict(X_test, x_y_vectors=x_y_vectors_test, full_information=True)
+    pred = classifier.predict(x_test, x_y_vectors=x_y_vectors_test, full_information=True)
     print('Prediction finished.')
 
     print("Write result to: %s" % os.path.abspath(args.output_file))
@@ -328,11 +328,11 @@ def prediction(args):
                 if args.validation_label_index is not None:
                     # - 2 because of the hypo/hyper-tuple which; label is expected after relation tuple
                     expected = cleaned_dataset[(x, y)]["data"][args.validation_label_index]
-                    c_positive += 1 if isBool(expected) else 0
-                    tp += 1 if isBool(expected) and isBool(predicted) else 0
-                    tn += 1 if not isBool(expected) and not isBool(predicted) else 0
-                    fp += 1 if not isBool(expected) and isBool(predicted) else 0
-                    fn += 1 if isBool(expected) and not isBool(predicted) else 0
+                    c_positive += 1 if is_bool(expected) else 0
+                    tp += 1 if is_bool(expected) and is_bool(predicted) else 0
+                    tn += 1 if not is_bool(expected) and not is_bool(predicted) else 0
+                    fp += 1 if not is_bool(expected) and is_bool(predicted) else 0
+                    fn += 1 if is_bool(expected) and not is_bool(predicted) else 0
 
                 writer.writerow(result)
                 c_printed_lines += 1
@@ -421,7 +421,7 @@ def main():
     parser.add_argument('-mp', '--model_prefix', default='wiki_model',
                         help="Prefix of the model files. Default: wiki_model")
 
-    parser.add_argument('--path_based', default=True, type=isBool, help="Path based analyses. Default: True")
+    parser.add_argument('--path_based', default=True, type=is_bool, help="Path based analyses. Default: True")
     parser.add_argument('--only_with_paths', action='store_true',
                         help="Throws out term-pairs with zero paths. Default: False")
 
@@ -440,19 +440,19 @@ def main():
     tp.add_argument('--epochs', default=3)
     tp.add_argument('--alpha', default=0.001)
     tp.add_argument('--word_dropout_rate', default=0.5)
-    tp.add_argument('--evaluate', default=True, type=isBool, help='Calculate precision, recall and F1.')
+    tp.add_argument('--evaluate', default=True, type=is_bool, help='Calculate precision, recall and F1.')
 
     pp = subparser.add_parser("prediction", help="Use a trained model and predict hypernyms.")
     pp.add_argument('-i', '--hype_file', required=True, help="CSV-file containing hypo/hyper-relations.")
     pp.add_argument('-o', '--output_file', default=script_path + 'result.csv')
-    pp.add_argument('--include_scores', default=True, type=isBool,
+    pp.add_argument('--include_scores', default=True, type=is_bool,
                     help="Includes the prediction score as new column.")
-    pp.add_argument('--include_predictions', default=True, type=isBool,
+    pp.add_argument('--include_predictions', default=True, type=is_bool,
                     help="Includes the prediction (e.g. 1 or 0) as new column.")
     pp.add_argument('--write_predictions', choices=['all', 'true', 'false'], default='all',
                     help="Only writes lines predicted as true/false or write all (default).")
     pp.add_argument('--csv_delimiter', default='\t')
-    pp.add_argument('--csv_has_header', default=False, type=isBool)
+    pp.add_argument('--csv_has_header', default=False, type=is_bool)
     pp.add_argument('--csv_tuple_start_index', default=0, type=int,
                     help="Sets the start index of hypo/hyper-relations in CSV-files (e.g. first column is an ID)")
     pp.add_argument('--validation_label_index', default=None, type=int,

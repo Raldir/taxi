@@ -114,7 +114,7 @@ class PathLSTMClassifier(BaseEstimator):
                 npval = val_one_instance.npvalue()
                 x = npval[0]
                 y = npval[1]
-                val = 1 if y >= 0.5 else 0  #np.argmax(npval)
+                val = 1 if y >= 0.5 else 0  # np.argmax(npval)
 
                 if full_information:
                     vals.append((val, y))
@@ -217,13 +217,22 @@ def get_path_embedding(builder, lemma_lookup, pos_lookup, dep_lookup, dir_lookup
     :param update: whether to update the lemma embeddings
     :return: a vector representing a path
     """
+    # inputs_old = [concatenate([word_dropout(lemma_lookup, edge[0], drop),
+    #                        word_dropout(pos_lookup, edge[1], drop),
+    #                        word_dropout(dep_lookup, edge[2], drop),
+    #                        word_dropout(dir_lookup, edge[3], drop)])
+    #           for edge in path]
 
     # Concatenate the edge components to one vector
-    inputs = [concatenate([word_dropout(lemma_lookup, edge[0], drop),
+    inputs = []
+    for edge in path:
+        try:
+            inputs.append(concatenate([word_dropout(lemma_lookup, edge[0], drop),
                            word_dropout(pos_lookup, edge[1], drop),
                            word_dropout(dep_lookup, edge[2], drop),
-                           word_dropout(dir_lookup, edge[3], drop)])
-              for edge in path]
+                           word_dropout(dir_lookup, edge[3], drop)]))
+        except Exception as e:
+            print("   Edge %s failed with exception: %s" % (edge, e))
 
     return builder.initial_state().transduce(inputs)[-1]
 
@@ -257,21 +266,22 @@ def train(builder, model, model_parameters, X_train, y_train, nepochs, alpha=0.0
     nminibatches = int(math.ceil(len(y_train) / minibatch_size))
 
     for epoch in range(nepochs):
-
         total_loss = 0.0
-
         epoch_indices = np.random.permutation(len(y_train))
 
         for minibatch in range(nminibatches):
             try:
+                print("%s / %s minibatch." % (minibatch + 1, nminibatches))
                 path_cache = {}
                 batch_indices = epoch_indices[minibatch * minibatch_size:(minibatch + 1) * minibatch_size]
 
                 renew_cg()
                 loss = esum([-log(pick(
-                    process_one_instance(builder, model, model_parameters, X_train[batch_indices[i]], path_cache, update,
+                    process_one_instance(builder, model, model_parameters, X_train[batch_indices[i]], path_cache,
+                                         update,
                                          dropout,
-                                         x_y_vectors=x_y_vectors[batch_indices[i]] if x_y_vectors is not None else None),
+                                         x_y_vectors=x_y_vectors[
+                                             batch_indices[i]] if x_y_vectors is not None else None),
                     y_train[batch_indices[i]])) for i in range(minibatch_size)])
                 total_loss += loss.value()  # forward computation
                 loss.backward()
