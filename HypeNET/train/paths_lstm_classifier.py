@@ -228,9 +228,9 @@ def get_path_embedding(builder, lemma_lookup, pos_lookup, dep_lookup, dir_lookup
     for edge in path:
         try:
             inputs.append(concatenate([word_dropout(lemma_lookup, edge[0], drop),
-                           word_dropout(pos_lookup, edge[1], drop),
-                           word_dropout(dep_lookup, edge[2], drop),
-                           word_dropout(dir_lookup, edge[3], drop)]))
+                                       word_dropout(pos_lookup, edge[1], drop),
+                                       word_dropout(dep_lookup, edge[2], drop),
+                                       word_dropout(dir_lookup, edge[3], drop)]))
         except Exception as e:
             print("   Edge %s failed with exception: %s" % (edge, e))
 
@@ -270,24 +270,21 @@ def train(builder, model, model_parameters, X_train, y_train, nepochs, alpha=0.0
         epoch_indices = np.random.permutation(len(y_train))
 
         for minibatch in range(nminibatches):
-            try:
-                print("%s / %s minibatch." % (minibatch + 1, nminibatches))
-                path_cache = {}
-                batch_indices = epoch_indices[minibatch * minibatch_size:(minibatch + 1) * minibatch_size]
+            print("Running minibatch %s of %s." % (minibatch + 1, nminibatches))
+            path_cache = {}
+            batch_indices = epoch_indices[minibatch * minibatch_size:(minibatch + 1) * minibatch_size]
 
-                renew_cg()
-                loss = esum([-log(pick(
-                    process_one_instance(builder, model, model_parameters, X_train[batch_indices[i]], path_cache,
-                                         update,
-                                         dropout,
-                                         x_y_vectors=x_y_vectors[
-                                             batch_indices[i]] if x_y_vectors is not None else None),
-                    y_train[batch_indices[i]])) for i in range(minibatch_size)])
-                total_loss += loss.value()  # forward computation
-                loss.backward()
-                trainer.update()
-            except Exception as e:
-                print("ERROR while training: %s" % e)
+            renew_cg()
+            loss = esum([-log(pick(
+                process_one_instance(builder, model, model_parameters, X_train[batch_indices[i]], path_cache,
+                                     update,
+                                     dropout,
+                                     x_y_vectors=x_y_vectors[
+                                         batch_indices[i]] if x_y_vectors is not None else None),
+                y_train[batch_indices[i]])) for i in range(minibatch_size)])
+            total_loss += loss.value()  # forward computation
+            loss.backward()
+            trainer.update()
 
         # trainer.update_epoch()
         total_loss /= len(y_train)

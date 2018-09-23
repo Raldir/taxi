@@ -65,7 +65,10 @@ def add_paths(corpus, dataset, lemma_index, pos_index, dep_index, dir_index):
         vectorize_paths = {}
 
         for path, count in paths.iteritems():
-            vectorize_paths[vectorize_path(path, lemma_index, pos_index, dep_index, dir_index)] = count
+            if path is None:
+                print("   Path of Hypo/Hyper %s/%s is none." % (x, y))
+            else:
+                vectorize_paths[vectorize_path(path, lemma_index, pos_index, dep_index, dir_index)] = count
 
         dataset[(x, y)]["dependency_paths"] = paths
         dataset[(x, y)]["paths"] = vectorize_paths
@@ -99,7 +102,7 @@ def load_paths(dataset, lemma_index, pos_index, dep_index, dir_index, args):
         if len(path_list.keys()) == 0:
             count_empty += 1
 
-        if not args.only_with_paths or len(path_list.keys()) > 0:
+        if not args.only_with_paths or (path_list is not None and len(path_list.keys()) > 0):
             clean_dataset[(x, y)] = dataset[(x, y)]
             clean_dataset[(x, y)]["x_y_vectors"] = None \
                 if args.path_based \
