@@ -253,6 +253,7 @@ def prediction(args):
 
     print("Loading the dataset from file '%s'..." % args.hype_file)
     test_set = {}
+    data_field_length = 0
     with open(args.hype_file, "r") as f:
         reader = csv.reader(f, delimiter=args.csv_delimiter)
 
@@ -264,6 +265,7 @@ def prediction(args):
                 test_set[tuple(key)] = {
                     "data": line
                 }
+                data_field_length = len(line)
 
     print("Dummy dataset print: %s" % test_set.keys()[
                                       0: min(len(test_set.keys()), 5)])  # Print first 5 entries if possible
@@ -318,6 +320,18 @@ def prediction(args):
         if args.write_predictions == 'all' or args.write_predictions == 'true':
             write_predictions.append(1)
 
+        if args.write_header:
+            header = ["col" + str(i) for i in range(0, data_field_length)]
+
+            if args.include_predictions:
+                header.append("prediction")
+
+            if args.include_scores:
+                header.append("prediction_score")
+                header.append("#paths")
+
+            writer.writerow(header)
+
         for (x, y) in cleaned_dataset:
             pred_index = cleaned_dataset[(x, y)]["pred_index"]
             predicted = pred[pred_index][0]
@@ -331,6 +345,7 @@ def prediction(args):
 
                 if args.include_scores:
                     result.append(prediction_score)
+                    result.append(len(cleaned_dataset[(x, y)]["paths"]))
 
                 if args.validation_label_index is not None:
                     # - 2 because of the hypo/hyper-tuple which; label is expected after relation tuple
@@ -458,6 +473,8 @@ def main():
                     help="Includes the prediction (e.g. 1 or 0) as new column.")
     pp.add_argument('--write_predictions', choices=['all', 'true', 'false'], default='all',
                     help="Only writes lines predicted as true/false or write all (default).")
+    pp.add_argument('--write_header', default=True, type=is_bool,
+                    help="Writes a header row to the output.")
     pp.add_argument('--csv_delimiter', default='\t')
     pp.add_argument('--csv_has_header', default=False, type=is_bool)
     pp.add_argument('--csv_tuple_start_index', default=0, type=int,
