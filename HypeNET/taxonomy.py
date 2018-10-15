@@ -60,22 +60,25 @@ def add_paths(corpus, dataset, lemma_index, pos_index, dep_index, dir_index):
     print("Generate paths...")
 
     for i, (x, y) in enumerate(dataset):
-        keys = dataset[(x, y)]["keys"]
-        paths = get_paths(corpus, keys[0], keys[1])
-        vectorize_paths = {}
+        try:
+            keys = dataset[(x, y)]["keys"]
+            paths = get_paths(corpus, keys[0], keys[1])
+            vectorize_paths = {}
 
-        for path, count in paths.iteritems():
-            vectorized_path = vectorize_path(path, lemma_index, pos_index, dep_index, dir_index)
+            for path, count in paths.iteritems():
+                vectorized_path = vectorize_path(path, lemma_index, pos_index, dep_index, dir_index)
 
-            if path is None:
-                print("   Path of %s / %s is none." % (x, y))
-            elif vectorized_path is None:
-                print("   Vectorized path of %s / %s is none." % (x, y))
-            else:
-                vectorize_paths[vectorized_path] = count
+                if path is None:
+                    print("   Path of %s / %s is none." % (x, y))
+                elif vectorized_path is None:
+                    print("   Vectorized path of %s / %s is none." % (x, y))
+                else:
+                    vectorize_paths[vectorized_path] = count
 
-        dataset[(x, y)]["dependency_paths"] = paths
-        dataset[(x, y)]["paths"] = vectorize_paths
+            dataset[(x, y)]["dependency_paths"] = paths
+            dataset[(x, y)]["paths"] = vectorize_paths
+        except Exception as e:
+            print("ERROR: %s" % e)
 
         if (i + 1) % (len(dataset) / 10) == 0:  # Print current state 10 times
             print("   %s / %s" % (i, len(dataset)))
