@@ -33,7 +33,7 @@ def get_words(args, words):
                 try:
                     float(c)
                 except:
-                    words.add(str(c).strip())
+                    words.add(str(c).strip().lower())
 
 
 def main():
