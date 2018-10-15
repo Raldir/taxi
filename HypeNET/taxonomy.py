@@ -77,7 +77,7 @@ def add_paths(corpus, dataset, lemma_index, pos_index, dep_index, dir_index):
                 else:
                     vectorize_paths[vectorized_path] = count
         except Exception as e:
-            print("ERROR for pair %s / %s: %s" % (e, x, y))
+            print("ERROR for pair %s / %s: %s" % (x, y, e))
 
         dataset[(x, y)]["paths"] = vectorize_paths
 
