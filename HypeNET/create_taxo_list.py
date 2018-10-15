@@ -29,11 +29,11 @@ def print_words(args, words):
 def get_words(args, words):
     with open(args.input_file, "r") as f_in:
         for i, line in enumerate(f_in):
-            for c in str(line).split(args.csv_delimiter):
+            for c in str(line).strip().split(args.csv_delimiter):
                 try:
                     float(c)
                 except:
-                    words.add(str(c))
+                    words.add(str(c).strip())
 
 
 def main():
