@@ -23,7 +23,7 @@ def read_values_of_file(args, input_file):
 
         for i, line in enumerate(reader):
             # col0	col1	prediction	prediction_score	#paths
-            if i > 0:
+            if i > 0 and line[0] != line[1]:
                 result.append((line[0], line[1], float(line[3])))
 
     return result
