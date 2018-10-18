@@ -5,25 +5,30 @@ import csv
 import os
 
 
-
-def print_words(args, words):
+def print_term_list(args, words):
     with open(args.input_file + ".wordlist", "w+") as f_out_wl:
-        with open(args.input_file + ".taxo", "w+") as f_out_taxo:
-            print("Create wordlist in: %s" % (args.input_file + ".wordlist"))
-            print("Create term combination list in: %s" % (args.input_file + ".taxo"))
+        print("Create wordlist in: %s" % (args.input_file + ".wordlist"))
+        writer_wl = csv.writer(f_out_wl, delimiter=args.csv_delimiter)
 
-            writer_wl = csv.writer(f_out_wl, delimiter=args.csv_delimiter)
-            writer_taxo = csv.writer(f_out_taxo, delimiter=args.csv_delimiter)
+        for i, w1 in enumerate(words):
+            writer_wl.writerow([w1])
 
-            for i, w1 in enumerate(words):
-                writer_wl.writerow([w1])
+            if (i + 1) % (len(words) / 10) == 0:  # Print current state 10 times
+                print("%s / %s printed." % (i, len(words)))
 
-                if (i + 1) % (len(words) / 10) == 0:  # Print current state 10 times
-                    print("%s / %s printed." % (i, len(words)))
 
-                for w2 in words:
-                    writer_taxo.writerow([w1, w2])
 
+def print_taxo(args, words):
+    with open(args.input_file + ".taxo", "w+") as f_out_taxo:
+        print("Create term combination list in: %s" % (args.input_file + ".taxo"))
+        writer_taxo = csv.writer(f_out_taxo, delimiter=args.csv_delimiter)
+
+        for i, w1 in enumerate(words):
+            if (i + 1) % (len(words) / 10) == 0:  # Print current state 10 times
+                print("%s / %s printed." % (i, len(words)))
+
+            for w2 in words:
+                writer_taxo.writerow([w1, w2])
 
 
 def get_words(args, words):
@@ -39,6 +44,7 @@ def get_words(args, words):
 def main():
     parser = argparse.ArgumentParser(description='Removes columns and rows of a HypeNet output file.')
     parser.add_argument('-i', '--input_file', required=True, help="CSV-file")
+    parser.add_argument('--only_taxo', action="store_true")
     parser.add_argument('--csv_delimiter', default="\t")
 
     args = parser.parse_args()
@@ -52,10 +58,14 @@ def main():
     words = sorted(words)
     print("Term list sorted.")
 
-    print("Print terms...")
-    print_words(args, words)
-    print("Terms printed.")
+    if not args.only_taxo:
+        print("Print term list...")
+        print_term_list(args, words)
+        print("Term list printed.")
 
+    print("Print terms...")
+    print_taxo(args, words)
+    print("Terms printed.")
 
 
 if __name__ == '__main__':
