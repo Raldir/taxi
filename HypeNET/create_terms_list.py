@@ -32,16 +32,18 @@ def read_terms(args):
     return result
 
 
-def find_terms(args, term_list, terms):
+def find_terms(args, term_list, prev_result, terms):
     result = set([])
+    new_terms = set([])
 
     for line in term_list:
         for term in terms:
             if re.match("^[a-zA-Z]* " + term + "$", line):
-                result = result.union(set(line.split(" ")))
+                new_terms = new_terms.union(set(line.split(" ")))
+                new_terms.add(line)
                 result.add(line)
 
-    return terms.union(result)
+    return new_terms, prev_result.union(result)
 
 
 def print_list(args, terms):
@@ -72,10 +74,11 @@ def main():
 
     term_list = read_terms(args)
 
-    terms = set([args.start_word])
+    terms = {args.start_word}
+    new_terms = {args.start_word}
     for i in range(0, args.iterations):
         print("Start iteration %s / %s." % (i + 1, args.iterations))
-        terms = find_terms(args, term_list, terms)
+        new_terms, terms = find_terms(args, term_list, terms, new_terms)
         print("Found %s terms." % len(terms))
 
     print("Found %s terms in a list of %s terms for the given word '%s'." % (len(terms), len(term_list), args.start_word))
