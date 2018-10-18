@@ -34,9 +34,15 @@ def find_terms(args, term_list, terms):
 
 
 def print_list(args, terms):
-    print("Write terms list to file '%s'..." % (args.input_file + ".terms"))
+    output_file = args.output_directory\
+                  + ("" if args.output_directory.endswith("/") else "/")\
+                  + args.start_word \
+                  + "_" + str(args.iterations) \
+                  + ".terms"
 
-    with codecs.open(args.input_file + ".terms", 'w') as f_out:
+    print("Write terms list to file '%s'..." % output_file)
+
+    with codecs.open(output_file, 'w') as f_out:
         # Read the next paragraph
         for term in terms:
             f_out.write(str(term) + "\n")
@@ -48,8 +54,9 @@ def main():
     print("Started HypeNet for taxonomy generation...")
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input_file', required=True)
-    parser.add_argument('-w', '--start_word')
+    parser.add_argument('-w', '--start_word', required=True)
     parser.add_argument('-n', '--iterations', type=int, default=3)
+    parser.add_argument('-o', '--output_directory')
     args = parser.parse_args()
 
     term_list = read_terms(args)

@@ -44,7 +44,7 @@ def get_words(args, words):
 def main():
     parser = argparse.ArgumentParser(description='Removes columns and rows of a HypeNet output file.')
     parser.add_argument('-i', '--input_file', required=True, help="CSV-file")
-    parser.add_argument('--only_taxo', action="store_true")
+    parser.add_argument('--print_word_list', action="store_true")
     parser.add_argument('--csv_delimiter', default="\t")
 
     args = parser.parse_args()
@@ -58,7 +58,7 @@ def main():
     words = sorted(words)
     print("Term list sorted.")
 
-    if not args.only_taxo:
+    if args.print_word_list:
         print("Print term list...")
         print_term_list(args, words)
         print("Term list printed.")
