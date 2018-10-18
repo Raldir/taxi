@@ -6,13 +6,6 @@ import random
 
 import codecs
 
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-
-nltk.download('stopwords')
-nltk.download('punkt')
-
 def read_terms(args):
     print("Read terms list from file '%s'..." % args.input_file)
     result = []
