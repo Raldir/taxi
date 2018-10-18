@@ -6,6 +6,12 @@ import random
 
 import codecs
 
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+nltk.download('stopwords')
+nltk.download('punkt')
 
 def read_terms(args):
     print("Read terms list from file '%s'..." % args.input_file)
@@ -14,7 +20,20 @@ def read_terms(args):
     with codecs.open(args.input_file, 'r') as f_in:
         # Read the next paragraph
         for line in f_in:
-            result.append(line.strip())
+            cleaned_line = line.strip().lower()\
+                .replace("a ", "")\
+                .replace("the ", "")\
+                .replace("{ ", "")\
+                .replace("} ", "")\
+                .replace("( ", "")\
+                .replace(") ", "")\
+                .replace("\" ", "")\
+                .replace("' ", "")\
+                .replace(". ", "") \
+                .replace(", ", "") \
+                .replace("; ", "")
+
+            result.append(cleaned_line)
 
     print("Terms list read.")
     return result
