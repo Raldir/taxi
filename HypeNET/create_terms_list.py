@@ -1,8 +1,7 @@
 #!/usr/bin/env python2
 
 import argparse
-import csv
-import random
+import re
 
 import codecs
 
@@ -15,6 +14,7 @@ def read_terms(args):
         for line in f_in:
             cleaned_line = line.strip().lower()\
                 .replace("a ", "")\
+                .replace("an ", "")\
                 .replace("the ", "")\
                 .replace("{ ", "")\
                 .replace("} ", "")\
@@ -37,9 +37,8 @@ def find_terms(args, term_list, terms):
 
     for line in term_list:
         for term in terms:
-            intersection = set(term.split(" ")) & set(line.split(" "))
-
-            if len(intersection) > 0:
+            if re.match("^[a-zA-Z]* " + term + "$", line):
+                result = result.union(set(line.split(" ")))
                 result.add(line)
 
     return terms.union(result)
