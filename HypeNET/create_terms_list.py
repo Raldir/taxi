@@ -37,7 +37,7 @@ def find_terms(args, term_list, terms):
 
     for line in term_list:
         for term in terms:
-            if line not in terms and re.match("^[a-zA-Z]* " + term + "$", line):
+            if re.match("^[a-zA-Z]* " + term + "$", line):
                 result = result.union(set(line.split(" ")))
                 result.add(line)
 
