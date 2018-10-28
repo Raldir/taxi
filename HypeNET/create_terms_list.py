@@ -80,6 +80,7 @@ def find_terms(args, term_list, prev_result, terms):
 def print_list(args, terms):
     output_file = args.output_directory \
                   + ("" if args.output_directory.endswith("/") else "/") \
+                  + args.prefix \
                   + args.start_word \
                   + "_" + str(args.iterations) \
                   + ".terms"
@@ -95,15 +96,17 @@ def print_list(args, terms):
 
 
 def main():
-    print("Started HypeNet for taxonomy generation...")
+    print("Start term-list-generator...")
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input_file', required=True)
     parser.add_argument('-w', '--start_word', required=True)
     parser.add_argument('-n', '--iterations', type=int, default=3)
     parser.add_argument('-p', '--processes', type=int, default=10)
+    parser.add_argument('--prefix', type=str, default="")
     parser.add_argument('-o', '--output_directory')
     args = parser.parse_args()
 
+    print("Start word: %s" % args.start_word)
     term_list = read_terms(args)
 
     terms = {args.start_word}
