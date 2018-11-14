@@ -23,19 +23,17 @@ def is_bool(x):
 def add_keys(corpus, dataset):
     print("Generate keys...")
     already_printed = set([])
-    unknown_words = 0
+    unknown_words = set([])
     full_key = 0
 
-    for (x, y) in dataset:
+    for i, (x, y) in enumerate(dataset):
         id_x, id_y = corpus.get_id_by_term(str(x)), corpus.get_id_by_term(str(y))
 
         if id_x == -1 and x not in already_printed:
-            unknown_words += 1
-            print("Unknown word: %s" % x)
+            unknown_words.add(x)
 
         if id_y == -1 and y not in already_printed:
-            unknown_words += 1
-            print("Unknown word: %s" % y)
+            unknown_words.add(y)
 
         already_printed.add(x)
         already_printed.add(y)
@@ -45,11 +43,16 @@ def add_keys(corpus, dataset):
 
         dataset[(x, y)]["keys"] = (id_x, id_y)
 
+        if (i + 1) % (len(dataset) / 10) == 0:  # Print current state 10 times
+            print("   %s / %s" % (i, len(dataset)))
+
+    print("Unknown words: %s" % ', '.join(unknown_words))
+
     print("Found %s (%.2f%%) known terms and %s (%.2f%%) unknown terms in given dataset with an input set of %s terms."
-          % (len(already_printed) - unknown_words,
-             float(len(already_printed) - unknown_words) / float(len(already_printed)) * 100.0,
-             unknown_words,
-             float(unknown_words) / float(len(already_printed)) * 100.0,
+          % (len(already_printed) - len(unknown_words),
+             float(len(already_printed) - len(unknown_words)) / float(len(already_printed)) * 100.0,
+             len(unknown_words),
+             float(len(unknown_words)) / float(len(already_printed)) * 100.0,
              len(already_printed)))
 
     print("Found %s full keysets of possible %s (%.2f%%)." % (
@@ -153,8 +156,15 @@ def training(args):
     dataset.update({keys: {"data": 1 if is_bool(val_set[keys]) else 0, "type": "val_set"} for keys in val_set})
     print('Done loading dataset')
 
-    print("Initializing word embeddings with file '%s'..." % os.path.abspath(args.embeddings_file))
-    wv, lemma_index = load_embeddings(args.embeddings_file)
+
+    print('Start loading word embeddings...')
+    if args.binary_embeddings_file is None or args.binary_embeddings_file == '':
+        print("Initializing word embeddings with file '%s'..." % os.path.abspath(args.embeddings_path + args.embeddings_file))
+        wv, lemma_index = load_embeddings(args.embeddings_path + args.embeddings_file)
+    else:
+        print("Initializing binary word embeddings with file '%s'..." % os.path.abspath(args.embeddings_path + args.binary_embeddings_file))
+        wv, lemma_index = load_binary_embeddings(args.embeddings_path + args.binary_embeddings_file)
+
     print('Finished loading word embeddings.')
 
     print("Define the dictionaries.")
@@ -216,9 +226,9 @@ def training(args):
     # x_y_vectors_val = x_y_vectors[len(train_set)+len(test_set):]
     print("Training/test set generated.")
     print("   Training set: %s" % len(x_train))
-    print("   Embeddings training: %s" % ("/" if x_y_vectors_train is None else str(len(x_y_vectors_train))))
+    print("   Embeddings training: %s" % ("" if x_y_vectors_train is None else str(len(x_y_vectors_train))))
     print("   Test set: %s" % len(x_test))
-    print("   Embeddings test: %s" % ("/" if x_y_vectors_test is None else str(len(x_y_vectors_test))))
+    print("   Embeddings test: %s" % ("" if x_y_vectors_test is None else str(len(x_y_vectors_test))))
 
     print('Create the classifier...')
     classifier = PathLSTMClassifier(num_lemmas=len(lemma_index),
@@ -462,7 +472,12 @@ def main():
 
     tp = subparser.add_parser("training", help="Train a model with a dataset.")
     tp.add_argument('-d', '--dataset_path', default=script_path + 'dataset/datasets/dataset_rnd/')
-    tp.add_argument('-e', '--embeddings_file', default=script_path + 'embedding/glove.6B.50d.txt')
+    tp.add_argument('-e', '--embeddings_path', default=script_path + 'embedding/', help="Path the directory with the corpus files.")
+
+    embedding_group = tp.add_mutually_exclusive_group()
+    embedding_group.add_argument('-ep', '--embeddings_file', default='glove.6B.50d.txt')
+    embedding_group.add_argument('-bep', '--binary_embeddings_file')
+
     tp.add_argument('--epochs', default=3)
     tp.add_argument('--alpha', default=0.001)
     tp.add_argument('--word_dropout_rate', default=0.5)
@@ -512,6 +527,7 @@ def main():
 
     if args.mode == "training":
         args.dataset_path = args.dataset_path + ("" if args.dataset_path.endswith("/") else "/")
+        args.embeddings_path = args.embeddings_path + ("" if args.embeddings_path.endswith("/") else "/")
         training(args)
     elif args.mode == "prediction":
         prediction(args)

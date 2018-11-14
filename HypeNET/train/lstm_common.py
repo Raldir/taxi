@@ -2,6 +2,9 @@ import codecs
 import numpy as np
 from itertools import groupby
 
+from gensim.models.poincare import PoincareModel, PoincareRelations
+from gensim.test.utils import datapath
+
 EMBEDDINGS_DIM = 50
 
 
@@ -13,7 +16,7 @@ def load_dataset(dataset_file):
     """
     with codecs.open(dataset_file, 'r', 'utf-8') as f_in:
         lines = [tuple(line.strip().split('\t')) for line in f_in]
-        dataset = { (x, y) : label for (x, y, label) in lines }
+        dataset = {(x, y): label for (x, y, label) in lines}
 
     return dataset
 
@@ -28,9 +31,9 @@ def get_paths(corpus, x, y):
     """
     x_to_y_paths = corpus.get_relations(x, y)
     y_to_x_paths = corpus.get_relations(y, x)
-    paths = { corpus.get_path_by_id(path) : count for (path, count) in x_to_y_paths.iteritems() }
-    paths.update({ corpus.get_path_by_id(path).replace('X/', '@@@').replace('Y/', 'X/').replace('@@@', 'Y/') : count
-                   for (path, count) in y_to_x_paths.iteritems() })
+    paths = {corpus.get_path_by_id(path): count for (path, count) in x_to_y_paths.iteritems()}
+    paths.update({corpus.get_path_by_id(path).replace('X/', '@@@').replace('Y/', 'X/').replace('@@@', 'Y/'): count
+                  for (path, count) in y_to_x_paths.iteritems()})
     return paths
 
 
@@ -127,16 +130,48 @@ def load_embeddings(file_name):
     with codecs.open(file_name, 'r', 'utf-8') as f_in:
         words, vectors = zip(*[line.strip().split(' ', 1) for line in f_in])
 
+    return prepare_embeddings(words, vectors)
+
+
+def load_binary_embeddings(file_name):
+    """
+    Load the pre-trained embeddings from a file
+    :param file_name: the embeddings file
+    :return: the vocabulary and the word vectors
+    """
+
+    model = PoincareModel.load(file_name)
+    words = []
+    vectors = []
+
+    print("Loading binary embeddings...")
+    for i, term in enumerate(model.kv.vocab):
+        words.append(term)
+
+        vector = model.kv.get_vector(term)
+        vectors.append(str(vector).replace("[", "").replace("]", ""))
+
+        if (i + 1) % (len( model.kv.vocab) / 10) == 0:  # Print current state 10 times
+            print("   %s / %s" % (i, len( model.kv.vocab)))
+
+    print("Finished loading binary embeddings.")
+    return prepare_embeddings(words, vectors)
+
+
+def prepare_embeddings(words, vectors):
+    print("Prepare embeddings...")
+
     # Add the unknown word
     UNKNOWN_WORD = np.random.random_sample((EMBEDDINGS_DIM,))
     wv = np.vstack((UNKNOWN_WORD, np.loadtxt(vectors)))
     words = ['#UNKNOWN#'] + list(words)
-    word_index = { w : i for i, w in enumerate(words) }
+    word_index = {w: i for i, w in enumerate(words)}
 
     # Normalize each row (word vector) in the matrix to sum-up to 1
-    row_norm = np.sum(np.abs(wv)**2, axis=-1)**(1./2)
+    row_norm = np.sum(np.abs(wv) ** 2, axis=-1) ** (1. / 2)
     wv /= row_norm[:, np.newaxis]
 
+    print("Embeddings prepared.")
     return wv, word_index
 
 

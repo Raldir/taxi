@@ -37,7 +37,7 @@ def clean(args):
 
 
 def main():
-    print("Started HypeNet for taxonomy generation...")
+    print("Clean HypeNet predicted files...")
     parser = argparse.ArgumentParser(description='Removes columns and rows of a HypeNet output file.')
     parser.add_argument('-i', '--input_file', nargs="+", required=True, help="CSV-file")
 
