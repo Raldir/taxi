@@ -156,14 +156,16 @@ def training(args):
     dataset.update({keys: {"data": 1 if is_bool(val_set[keys]) else 0, "type": "val_set"} for keys in val_set})
     print('Done loading dataset')
 
+    print("Initializing embeddings with file '%s'..." % os.path.abspath(args.embeddings_path + args.embeddings_file))
 
-    print('Start loading word embeddings...')
-    if args.binary_embeddings_file is None or args.binary_embeddings_file == '':
-        print("Initializing word embeddings with file '%s'..." % os.path.abspath(args.embeddings_path + args.embeddings_file))
+    if args.embeddings_type == "glove":
         wv, lemma_index = load_embeddings(args.embeddings_path + args.embeddings_file)
+    elif args.embeddings_type == "poincare":
+        wv, lemma_index = load_poincare_embeddings(args.embeddings_path + args.embeddings_file)
+    elif args.embeddings_type == "word2vec":
+        wv, lemma_index = load_word2vec_embeddings(args.embeddings_path + args.embeddings_file)
     else:
-        print("Initializing binary word embeddings with file '%s'..." % os.path.abspath(args.embeddings_path + args.binary_embeddings_file))
-        wv, lemma_index = load_binary_embeddings(args.embeddings_path + args.binary_embeddings_file)
+        raise Exception("Embeddings type '%s' unknown." % args.embeddings_type)
 
     print('Finished loading word embeddings.')
 
@@ -472,11 +474,10 @@ def main():
 
     tp = subparser.add_parser("training", help="Train a model with a dataset.")
     tp.add_argument('-d', '--dataset_path', default=script_path + 'dataset/datasets/dataset_rnd/')
-    tp.add_argument('-e', '--embeddings_path', default=script_path + 'embedding/', help="Path the directory with the corpus files.")
-
-    embedding_group = tp.add_mutually_exclusive_group()
-    embedding_group.add_argument('-ep', '--embeddings_file', default='glove.6B.50d.txt')
-    embedding_group.add_argument('-bep', '--binary_embeddings_file')
+    tp.add_argument('-ep', '--embeddings_path', default=script_path + 'embedding/',
+                    help="Path the directory with the embeddings files.")
+    tp.add_argument('-e', '--embeddings_file', default="glove.6B.50d.txt", help="Embeddings file")
+    tp.add_argument("-et", "--embeddings_type", choices=['glove', 'word2vec', 'poincare'], default='glove')
 
     tp.add_argument('--epochs', default=3)
     tp.add_argument('--alpha', default=0.001)

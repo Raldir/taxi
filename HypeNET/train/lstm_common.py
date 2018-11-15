@@ -2,8 +2,8 @@ import codecs
 import numpy as np
 from itertools import groupby
 
-from gensim.models.poincare import PoincareModel, PoincareRelations
-from gensim.test.utils import datapath
+from gensim.models import Word2Vec
+from gensim.models.poincare import PoincareModel
 
 EMBEDDINGS_DIM = 50
 
@@ -133,28 +133,51 @@ def load_embeddings(file_name):
     return prepare_embeddings(words, vectors)
 
 
-def load_binary_embeddings(file_name):
+def load_word2vec_embeddings(file_name):
     """
     Load the pre-trained embeddings from a file
     :param file_name: the embeddings file
     :return: the vocabulary and the word vectors
     """
+    model = Word2Vec.load(file_name)
+    words = []
+    vectors = []
 
+    print("Loading %s word2vec embeddings..." % len(model.wv.vocab))
+    for i, term in enumerate(model.wv.vocab):
+        words.append(term.encode("ascii", errors="ignore").lower().replace("_", " "))
+
+        vector = model.wv.get_vector(term)
+        vectors.append(str(vector).replace("[", "").replace("]", ""))
+
+        if (i + 1) % (len(model.wv.vocab) / 10) == 0:  # Print current state 10 times
+            print("   %s / %s" % (i, len(model.wv.vocab)))
+
+    print("Finished loading word2vec embeddings.")
+    return prepare_embeddings(words, vectors)
+
+
+def load_poincare_embeddings(file_name):
+    """
+    Load the pre-trained embeddings from a file
+    :param file_name: the embeddings file
+    :return: the vocabulary and the word vectors
+    """
     model = PoincareModel.load(file_name)
     words = []
     vectors = []
 
-    print("Loading binary embeddings...")
+    print("Loading %s poincare embeddings..." % len(model.kv.vocab))
     for i, term in enumerate(model.kv.vocab):
-        words.append(term)
+        words.append(term.encode("ascii", errors="ignore").lower().replace("_", " "))
 
         vector = model.kv.get_vector(term)
         vectors.append(str(vector).replace("[", "").replace("]", ""))
 
-        if (i + 1) % (len( model.kv.vocab) / 10) == 0:  # Print current state 10 times
-            print("   %s / %s" % (i, len( model.kv.vocab)))
+        if (i + 1) % (len(model.kv.vocab) / 10) == 0:  # Print current state 10 times
+            print("   %s / %s" % (i, len(model.kv.vocab)))
 
-    print("Finished loading binary embeddings.")
+    print("Finished loading poincare embeddings.")
     return prepare_embeddings(words, vectors)
 
 
