@@ -8,7 +8,7 @@ from sklearn.base import BaseEstimator
 
 NUM_LAYERS = 2
 HIDDEN_DIM = 60
-LEMMA_DIM = 50
+# LEMMA_DIM = 50
 POS_DIM = 4
 DEP_DIM = 5
 DIR_DIM = 1
@@ -19,7 +19,7 @@ EMPTY_PATH = ((0, 0, 0, 0),)
 class PathLSTMClassifier(BaseEstimator):
 
     def __init__(self, num_lemmas, num_pos, num_dep, num_directions=5, n_epochs=10, num_relations=2,
-                 alpha=0.01, lemma_embeddings=None, dropout=0.0, use_xy_embeddings=True):
+                 alpha=0.01, lemma_embeddings=None, dropout=0.0, use_xy_embeddings=True, lemma_dim=50):
         """"
         Initialize the LSTM
         :param num_lemmas Number of distinct lemmas
@@ -48,11 +48,17 @@ class PathLSTMClassifier(BaseEstimator):
         if lemma_embeddings is not None:
             self.wv = lemma_embeddings
 
+        self.lemma_dim = lemma_dim
+
         # Create the network
         print 'Creating the network...'
-        self.builder, self.model, self.model_parameters = create_computation_graph(self.num_lemmas, self.num_pos,
-                                                                                   self.num_dep, self.num_directions,
-                                                                                   self.num_relations, self.wv,
+        self.builder, self.model, self.model_parameters = create_computation_graph(self.lemma_dim,
+                                                                                   self.num_lemmas,
+                                                                                   self.num_pos,
+                                                                                   self.num_dep,
+                                                                                   self.num_directions,
+                                                                                   self.num_relations,
+                                                                                   self.wv,
                                                                                    self.use_xy_embeddings)
         print 'Done!'
 
@@ -142,7 +148,7 @@ class PathLSTMClassifier(BaseEstimator):
             path_embedding = get_path_embedding(builder, lemma_lookup, pos_lookup, dep_lookup, dir_lookup, path)
 
             if self.use_xy_embeddings:
-                zero_word = _dynet.inputVector([0.0] * LEMMA_DIM)
+                zero_word = _dynet.inputVector([0.0] * self.lemma_dim)
                 path_embedding = concatenate([zero_word, path_embedding, zero_word])
 
             path_scores.append(softmax(W * path_embedding).npvalue()[1])
@@ -291,7 +297,7 @@ def train(builder, model, model_parameters, X_train, y_train, nepochs, alpha=0.0
         print 'Epoch', (epoch + 1), '/', nepochs, 'Loss =', total_loss
 
 
-def create_computation_graph(num_lemmas, num_pos, num_dep, num_directions, num_relations, wv=None,
+def create_computation_graph(dim_lemma, num_lemmas, num_pos, num_dep, num_directions, num_relations, wv=None,
                              use_xy_embeddings=True):
     """
     Initialize the model
@@ -308,16 +314,16 @@ def create_computation_graph(num_lemmas, num_pos, num_dep, num_directions, num_r
     model = Model()
     network_input = HIDDEN_DIM
 
-    builder = LSTMBuilder(NUM_LAYERS, LEMMA_DIM + POS_DIM + DEP_DIM + DIR_DIM, network_input, model)
+    builder = LSTMBuilder(NUM_LAYERS, dim_lemma + POS_DIM + DEP_DIM + DIR_DIM, network_input, model)
 
     # Concatenate x and y
     if use_xy_embeddings:
-        network_input += 2 * LEMMA_DIM
+        network_input += 2 * dim_lemma
 
     model_parameters = {}
     model_parameters["W"] = model.add_parameters((num_relations, network_input))
 
-    model_parameters["lemma_lookup"] = model.add_lookup_parameters((num_lemmas, LEMMA_DIM))
+    model_parameters["lemma_lookup"] = model.add_lookup_parameters((num_lemmas, dim_lemma))
 
     # Pre-trained word embeddings
     if wv is not None:
@@ -341,7 +347,7 @@ def load_model(model_file_prefix):
 
     classifier = PathLSTMClassifier(params['lemma_lookup'][0], params['pos_lookup'][0], params['dep_lookup'][0],
                                     params['dir_lookup'][0], num_relations=params['num_relations'],
-                                    use_xy_embeddings=params['use_xy_embeddings'])
+                                    use_xy_embeddings=params['use_xy_embeddings'], lemma_dim=params["lemma_dim"])
 
     # Load the model
     # classifier.model.load(model_file_prefix + '.model') FIXED

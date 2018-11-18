@@ -130,7 +130,8 @@ def load_embeddings(file_name):
     with codecs.open(file_name, 'r', 'utf-8') as f_in:
         words, vectors = zip(*[line.strip().split(' ', 1) for line in f_in])
 
-    return prepare_embeddings(words, vectors)
+    dim_size = vectors[0].count(" ") + 1
+    return prepare_embeddings(words, vectors, dim_size)
 
 
 def load_word2vec_embeddings(file_name):
@@ -142,19 +143,21 @@ def load_word2vec_embeddings(file_name):
     model = Word2Vec.load(file_name)
     words = []
     vectors = []
+    dim_size = EMBEDDINGS_DIM
 
     print("Loading %s word2vec embeddings..." % len(model.wv.vocab))
     for i, term in enumerate(model.wv.vocab):
         words.append(term.encode("ascii", errors="ignore").lower().replace("_", " "))
 
         vector = model.wv.get_vector(term)
+        dim_size = max(EMBEDDINGS_DIM, vector.size)
         vectors.append(str(vector).replace("[", "").replace("]", ""))
 
         if (i + 1) % (len(model.wv.vocab) / 10) == 0:  # Print current state 10 times
             print("   %s / %s" % (i, len(model.wv.vocab)))
 
     print("Finished loading word2vec embeddings.")
-    return prepare_embeddings(words, vectors)
+    return prepare_embeddings(words, vectors, dim_size)
 
 
 def load_poincare_embeddings(file_name):
@@ -166,26 +169,28 @@ def load_poincare_embeddings(file_name):
     model = PoincareModel.load(file_name)
     words = []
     vectors = []
+    dim_size = EMBEDDINGS_DIM
 
     print("Loading %s poincare embeddings..." % len(model.kv.vocab))
     for i, term in enumerate(model.kv.vocab):
         words.append(term.encode("ascii", errors="ignore").lower().replace("_", " "))
 
         vector = model.kv.get_vector(term)
+        dim_size = max(EMBEDDINGS_DIM, vector.size)
         vectors.append(str(vector).replace("[", "").replace("]", ""))
 
         if (i + 1) % (len(model.kv.vocab) / 10) == 0:  # Print current state 10 times
             print("   %s / %s" % (i, len(model.kv.vocab)))
 
     print("Finished loading poincare embeddings.")
-    return prepare_embeddings(words, vectors)
+    return prepare_embeddings(words, vectors, dim_size)
 
 
-def prepare_embeddings(words, vectors):
+def prepare_embeddings(words, vectors, dim_size=EMBEDDINGS_DIM):
     print("Prepare embeddings...")
 
     # Add the unknown word
-    UNKNOWN_WORD = np.random.random_sample((EMBEDDINGS_DIM,))
+    UNKNOWN_WORD = np.random.random_sample((dim_size,))
     wv = np.vstack((UNKNOWN_WORD, np.loadtxt(vectors)))
     words = ['#UNKNOWN#'] + list(words)
     word_index = {w: i for i, w in enumerate(words)}
@@ -195,7 +200,7 @@ def prepare_embeddings(words, vectors):
     wv /= row_norm[:, np.newaxis]
 
     print("Embeddings prepared.")
-    return wv, word_index
+    return wv, word_index, dim_size
 
 
 def unique(a):

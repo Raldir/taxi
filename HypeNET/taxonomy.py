@@ -159,11 +159,11 @@ def training(args):
     print("Initializing embeddings with file '%s'..." % os.path.abspath(args.embeddings_path + args.embeddings_file))
 
     if args.embeddings_type == "glove":
-        wv, lemma_index = load_embeddings(args.embeddings_path + args.embeddings_file)
+        wv, lemma_index, lemma_dim = load_embeddings(args.embeddings_path + args.embeddings_file)
     elif args.embeddings_type == "poincare":
-        wv, lemma_index = load_poincare_embeddings(args.embeddings_path + args.embeddings_file)
+        wv, lemma_index, lemma_dim = load_poincare_embeddings(args.embeddings_path + args.embeddings_file)
     elif args.embeddings_type == "word2vec":
-        wv, lemma_index = load_word2vec_embeddings(args.embeddings_path + args.embeddings_file)
+        wv, lemma_index, lemma_dim = load_word2vec_embeddings(args.embeddings_path + args.embeddings_file)
     else:
         raise Exception("Embeddings type '%s' unknown." % args.embeddings_type)
 
@@ -242,7 +242,8 @@ def training(args):
                                     lemma_embeddings=wv,
                                     dropout=args.word_dropout_rate,
                                     alpha=args.alpha,
-                                    use_xy_embeddings=not args.path_based)
+                                    use_xy_embeddings=not args.path_based,
+                                    lemma_dim=lemma_dim)
     print('Classifier created.')
 
     print('Training with learning rate = %f, dropout = %f...' % (args.alpha, args.word_dropout_rate))
