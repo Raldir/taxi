@@ -82,6 +82,7 @@ class PathLSTMClassifier(BaseEstimator):
         params = {param_name: self.model_parameters[param_name].shape() for param_name in lookups}
         params['num_relations'] = self.num_relations
         params['use_xy_embeddings'] = self.use_xy_embeddings
+        params["lemma_dim"] = self.lemma_dim
 
         with open(output_prefix + '.params', 'w') as f_out:
             json.dump(params, f_out, indent=2)
@@ -345,6 +346,7 @@ def load_model(model_file_prefix):
     with open(model_file_prefix + '.params') as f_in:
         params = json.load(f_in)
 
+    print("Loaded model: %s" % params)
     classifier = PathLSTMClassifier(params['lemma_lookup'][0], params['pos_lookup'][0], params['dep_lookup'][0],
                                     params['dir_lookup'][0], num_relations=params['num_relations'],
                                     use_xy_embeddings=params['use_xy_embeddings'], lemma_dim=params["lemma_dim"])

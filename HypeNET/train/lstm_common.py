@@ -131,7 +131,7 @@ def load_embeddings(file_name):
         words, vectors = zip(*[line.strip().split(' ', 1) for line in f_in])
 
     dim_size = vectors[0].count(" ") + 1
-    return prepare_embeddings(words, vectors, dim_size)
+    return prepare_embeddings(words, list(vectors), dim_size)
 
 
 def load_word2vec_embeddings(file_name):
@@ -151,7 +151,7 @@ def load_word2vec_embeddings(file_name):
 
         vector = model.wv.get_vector(term)
         dim_size = max(EMBEDDINGS_DIM, vector.size)
-        vectors.append(str(vector).replace("[", "").replace("]", ""))
+        vectors.append(vector_to_str(vector))
 
         if (i + 1) % (len(model.wv.vocab) / 10) == 0:  # Print current state 10 times
             print("   %s / %s" % (i, len(model.wv.vocab)))
@@ -177,7 +177,7 @@ def load_poincare_embeddings(file_name):
 
         vector = model.kv.get_vector(term)
         dim_size = max(EMBEDDINGS_DIM, vector.size)
-        vectors.append(str(vector).replace("[", "").replace("]", ""))
+        vectors.append(vector_to_str(vector))
 
         if (i + 1) % (len(model.kv.vocab) / 10) == 0:  # Print current state 10 times
             print("   %s / %s" % (i, len(model.kv.vocab)))
@@ -191,9 +191,21 @@ def prepare_embeddings(words, vectors, dim_size=EMBEDDINGS_DIM):
 
     # Add the unknown word
     UNKNOWN_WORD = np.random.random_sample((dim_size,))
-    wv = np.vstack((UNKNOWN_WORD, np.loadtxt(vectors)))
     words = ['#UNKNOWN#'] + list(words)
-    word_index = {w: i for i, w in enumerate(words)}
+    vectors = [vector_to_str(UNKNOWN_WORD)]  + vectors
+
+    final_vector = []
+    word_index = {}
+
+    for i, w in enumerate(words):
+        if w in word_index:
+            print("Word '%s' is not unique in list. Keep first one. Vectors (first/second): %s / %s" % (w, vectors[word_index[w]], vectors[i]))
+        else:
+            word_index[w] = i
+            final_vector.append(vectors[i])
+
+    wv = np.loadtxt(final_vector)
+        #np.vstack((UNKNOWN_WORD, np.loadtxt(vectors)))
 
     # Normalize each row (word vector) in the matrix to sum-up to 1
     row_norm = np.sum(np.abs(wv) ** 2, axis=-1) ** (1. / 2)
@@ -201,6 +213,10 @@ def prepare_embeddings(words, vectors, dim_size=EMBEDDINGS_DIM):
 
     print("Embeddings prepared.")
     return wv, word_index, dim_size
+
+
+def vector_to_str(vector):
+    return str(vector).replace("[", "").replace("]", "").replace("\n", "").replace("\r", "")
 
 
 def unique(a):

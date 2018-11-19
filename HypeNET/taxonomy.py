@@ -167,6 +167,9 @@ def training(args):
     else:
         raise Exception("Embeddings type '%s' unknown." % args.embeddings_type)
 
+    print("Word vectors: %s" % len(wv))
+    print("Lemma index: %s" % len(lemma_index))
+    print("Lemma dimensions: %s" % lemma_dim)
     print('Finished loading word embeddings.')
 
     print("Define the dictionaries.")
