@@ -196,13 +196,15 @@ def prepare_embeddings(words, vectors, dim_size=EMBEDDINGS_DIM):
 
     final_vector = []
     word_index = {}
+    index = 0
 
     for i, w in enumerate(words):
         if w in word_index:
-            print("Word '%s' is not unique in list. Keep first one. Vectors (first/second): %s / %s" % (w, vectors[word_index[w]], vectors[i]))
+            print("Word '%s' is not unique in list." % w)
         else:
-            word_index[w] = i
+            word_index[w] = index
             final_vector.append(vectors[i])
+            index += 1
 
     wv = np.loadtxt(final_vector)
         #np.vstack((UNKNOWN_WORD, np.loadtxt(vectors)))
