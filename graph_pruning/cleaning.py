@@ -55,8 +55,8 @@ def all_parent_rel(element, list_data):
     for relation in list_data:
         if relation[1] == parent_root:
             remove_relations.append(relation)
-    for ele in remove_relations:
-        remove_relations += all_parent_rel(ele[2], list_data)
+    #for ele in remove_relations:
+    #    remove_relations += all_parent_rel(ele[2], list_data)
     return set(remove_relations)
 
 
@@ -91,10 +91,13 @@ with open(filename_in, 'r') as f:
 
 
 all_parent_root = all_parent_rel(ROOT, list_data)
+elements = set([])
+
 for el in all_parent_root:
     list_data.remove(el)
+    elements.add(el[2])
 
-elements = set([])
+
 for relation in list_data:
     elements.add(relation[1])
     elements.add(relation[2])

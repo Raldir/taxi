@@ -51,11 +51,9 @@ def scc_nodes_edges(g):
 				biggest_scc = sub
 	nonscc_nodes = set(g.nodes()) - scc_nodes
 	nonscc_edges = set(g.edges()) - scc_edges
-<<<<<<< HEAD
-	print num_nodes_biggest_scc
-=======
+
 	print(num_nodes_biggest_scc)
->>>>>>> upstream/master
+
 	print("num of big sccs: %d" % num_big_sccs)
 	if biggest_scc == None:
 		return scc_nodes,scc_nodes,nonscc_nodes,nonscc_edges
@@ -71,10 +69,5 @@ def c_c(graph_file):
 	g = nx.read_edgelist(graph_file,create_using = nx.Graph(),nodetype = int)
 	graphs = nx.connected_component_subgraphs(g)
 	for graph in graphs:
-<<<<<<< HEAD
-		print graph.number_of_nodes(),graph.number_of_edges()
-	print len(graphs)
-=======
 		print(graph.number_of_nodes(), graph.number_of_edges())
 	print(len(graphs))
->>>>>>> upstream/master
