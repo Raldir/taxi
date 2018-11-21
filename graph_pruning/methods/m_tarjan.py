@@ -21,7 +21,7 @@ def prepare(node):
     hyper_to_hypo[hyper].append(hypo)
 
 
-def do(filename_out, delimiter, mode, gephi_out):
+def do(filename_out, delimiter, mode, gephi_out, filename_in=None):
     cycles_removed = 0
     cycle = []  # Initialize with value to trigger the while loop. Python has no do-while...
 

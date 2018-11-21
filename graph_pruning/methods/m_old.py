@@ -23,7 +23,7 @@ def prepare(node):
 
 
 
-def do(filename_out, delimiter, mode):
+def do(filename_out, delimiter, mode, gephi_out, filename_in=None):
     print("Relations created (hypo_to_hyper):")
     print(hypo_to_hyper)
 
