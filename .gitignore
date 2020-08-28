@@ -1,3 +1,12 @@
+# Custom Files
+resources/
+resources.tgz
+taxi_output/simple_full/food/
+taxi_output/simple_full/food_wordnet/
+taxi_output/simple_full/environment_eurovoc/
+taxi_output/simple_full/science_wordnet/
+taxi_output/simple_full/science_eurovoc/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -8,6 +17,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+.idea/
 env/
 build/
 develop-eggs/
@@ -67,3 +77,66 @@ target/
 #TestData (Rami)
 Data_R/
 
+#Rami_Gitignore
+isas-commoncrawl.csv
+
+eval/taxi_eval_archive/input/.nfs000000007c4c200100000001
+eval/taxi_eval_archive/input/.~lock.system.taxo#
+eval/taxi_eval_archive/input/.~lock.system_or.taxo#
+eval/taxi_eval_archive/input/system2.taxo
+eval/taxi_eval_archive/input/system_from_local.taxo
+resources.tgz.1
+resources.tgz.2
+wget-log
+taxi_output/simple_test/output.txt
+
+
+distributed_semantics/GoogleNews-vectors-negative300.bin
+distributed_semantics/reddit_vectors-1.1.0/
+distributed_semantics/wiki-news-300d-1M-subword.vec
+
+distributed_semantics/crawl-300d-2M.vec
+distributed_semantics/wiki-news-300d-1M.vec.zip
+distributed_semantics/wiki.en.bin
+distributed_semantics/wiki.en.vec
+
+distributed_semantics/reviews_data.txt
+distributed_semantics/reviews_data.txt.gz
+distributed_semantics/trial_emb
+distributed_semantics/trial_emb.trainables.syn1neg.npy
+distributed_semantics/trial_emb.trainables.vectors_ngrams_lockf.npy
+distributed_semantics/trial_emb.trainables.vectors_vocab_lockf.npy
+distributed_semantics/trial_emb.wv.vectors.npy
+distributed_semantics/trial_emb.wv.vectors_ngrams.npy
+distributed_semantics/trial_emb.wv.vectors_vocab.npy
+
+distributed_semantics/enwiki-latest-pages-articles.xml
+distributed_semantics/wikipedia_utf8_filtered_20pageviews.csv
+
+other
+.idea/
+Model/
+TExEval_trialdata_1.2
+property_analysis/isas-commoncrawl.csv 
+distributed_semantics/own_embeddings
+distributed_semantics/own_embeddings.trainables.syn1neg.npy
+distributed_semantics/own_embeddings.trainables.vectors_ngrams_lockf.npy
+distributed_semantics/own_embeddings.trainables.vectors_vocab_lockf.npy
+distributed_semantics/own_embeddings.wv.vectors.npy
+distributed_semantics/own_embeddings.wv.vectors_ngrams.npy
+distributed_semantics/own_embeddings.wv.vectors_vocab.npy
+distributed_semantics/own_embeddings_w2v
+distributed_semantics/own_embeddings_w2v.trainables.syn1neg.npy
+distributed_semantics/own_embeddings_w2v.wv.vectors.npy
+poincare-embeddings/
+distributed_semantics/data/
+distributed_semantics/embeddings/
+distributed_semantics/gensim_embeddings_backup.py
+distributed_semantics/logs/
+distributed_semantics/out/
+distributed_semantics/vis/
+taxi_output/environment/
+taxi_output/food/
+taxi_output/science/
+out/
+taxi_output/

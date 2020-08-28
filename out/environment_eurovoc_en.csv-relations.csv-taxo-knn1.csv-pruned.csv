@@ -1,0 +1,174 @@
+0	accidental pollution	pollution
+1	atmospheric pollution	pollution
+2	chemical pollution	pollution
+3	coastal pollution	pollution
+4	domestic waste	pollution
+5	industrial pollution	pollution
+6	local pollution	pollution
+7	marine environment	pollution
+8	marine pollution	pollution
+9	metal pollution	pollution
+10	motor vehicle pollution	pollution
+11	noise	pollution
+12	noise pollution	pollution
+13	oil pollution	pollution
+14	organic pollution	pollution
+15	pollution from agricultural sources	pollution
+16	pollution from land-based sources	pollution
+17	pollution from ships	pollution
+18	pollution of waterways	pollution
+19	radioactive pollution	pollution
+20	soil pollution	pollution
+21	stratospheric pollution	pollution
+22	thermal pollution	pollution
+23	water pollution	pollution
+24	acid rain	pollutant
+25	atmospheric pollutant	pollutant
+26	corrosion	pollutant
+27	drinking water	pollutant
+28	greenhouse gas	pollutant
+29	ozone	pollutant
+30	stratospheric pollutant	pollutant
+31	toxic substance	pollutant
+32	water pollutant	pollutant
+33	acidification	ocean
+34	antarctic ocean	ocean
+35	arctic	ocean
+36	arctic ocean	ocean
+37	atlantic ocean	ocean
+38	atmospheric conditions	ocean
+39	black sea	ocean
+40	caspian sea	ocean
+41	chemical pollution	ocean
+42	continental shelf	ocean
+43	deforestation	ocean
+44	dolphin	ocean
+45	environmental economics	ocean
+46	environmental protection	ocean
+47	indian ocean	ocean
+48	irish sea	ocean
+49	marine life	ocean
+50	marine mammal	ocean
+51	pacific ocean	ocean
+52	polar region	ocean
+53	red sea	ocean
+54	whale	ocean
+55	aegean sea	sensitive area
+56	desert	sensitive area
+57	nature reserve	sensitive area
+58	agricultural waste	waste
+59	chemical waste	waste
+60	domestic waste	waste
+61	electronic waste	waste
+62	environmental standard	waste
+63	hazardous waste	waste
+64	hospital waste	waste
+65	industrial waste	waste
+66	metal waste	waste
+67	non-recoverable waste	waste
+68	pesticide residue	waste
+69	radioactive waste	waste
+70	sewage sludge	waste
+71	waste management	waste
+72	animal life	biodiversity
+73	exploitation of resources	biodiversity
+74	over-exploitation of resources	biodiversity
+75	wolf	biodiversity
+76	bird	animal life
+77	antarctic ocean	arctic ocean
+78	antarctica	desert
+79	reptile	desert
+80	antarctica	arctic
+81	aquatic environment	environment
+82	atmosphere	environment
+83	environmental impact	environment
+84	geophysical environment	environment
+85	marine environment	environment
+86	noise level	environment
+87	physical environment	environment
+88	arid zone	ecosystem
+89	biodiversity	ecosystem
+90	biosphere	ecosystem
+91	climate change	ecosystem
+92	climatic zone	ecosystem
+93	coastal protection	ecosystem
+94	eutrophication	ecosystem
+95	freshwater	ecosystem
+96	lake	ecosystem
+97	marine ecosystem	ecosystem
+98	physical environment	ecosystem
+99	plain	ecosystem
+100	terrestrial ecosystem	ecosystem
+101	waste	ecosystem
+102	mediterranean sea	atlantic ocean
+103	bad weather	natural disaster
+104	cyclone	natural disaster
+105	defoliation	natural disaster
+106	desertification	natural disaster
+107	earthquake	natural disaster
+108	fire	natural disaster
+109	volcanic eruption	natural disaster
+110	baltic sea	sea
+111	bathing water	water
+112	drinking water	water
+113	english channel	water
+114	environmental education	water
+115	estuary	water
+116	fire protection	water
+117	freshwater	water
+118	groundwater	water
+119	ice	water
+120	ionian sea	water
+121	national park	water
+122	percolation water	water
+123	plant life	water
+124	sea	water
+125	stagnant water	water
+126	surface water	water
+127	wastewater	water
+128	watercourse	water
+129	bear	bird
+130	insect	bird
+131	protected species	bird
+132	rodent	bird
+133	biotope	marine ecosystem
+134	climate	environmental policy
+135	climate change policy	environmental policy
+136	eu environmental policy	environmental policy
+137	terrestrial ecosystem	climate change
+138	dust	drought
+139	ecosystem	polar region
+140	energy resources	natural resources
+141	mineral resources	natural resources
+142	resources of the sea	natural resources
+143	water	natural resources
+144	water resources	natural resources
+145	wildlife	natural resources
+146	environment	insect
+147	pollution control	environmental protection
+148	erosion	natural hazard
+149	eu emission allowance	emission allowance
+150	over-exploitation of resources	exploitation of resources
+151	exploitation of the sea-bed	exploitation of the seas
+152	flood	global warming
+153	greenhouse effect	global warming
+154	mountain	flood
+155	geophysical environment	physical environment
+156	island	lake
+157	protected area	lake
+158	seal	marine mammal
+159	underwater mineral resources	mineral resources
+160	monkey	reptile
+161	natural hazard	mountain
+162	natural disaster	man-made disaster
+163	natural resources	environmental law
+164	soil pollution	oil pollution
+165	pollutant	nuisance
+166	pollution	nuisance
+167	stagnant water	nuisance
+168	water pollution	nuisance
+169	protection of animal life	protection of animals
+170	sensitive area	water protection
+171	subtropical zone	tropical zone
+172	surface water	water management
+173	waste incineration	waste disposal
