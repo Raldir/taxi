@@ -1,0 +1,203 @@
+\begin{thebibliography}{}
+
+\bibitem[Alfarone and Davis, 2015]{alfarone2015unsupervised}
+Alfarone, D. and Davis, J. (2015).
+\newblock Unsupervised learning of an is-a taxonomy from a limited
+  domain-specific corpus.
+\newblock In {\em Proceedings of the 24th International Joint Conference on
+  Artificial Intelligence}, pages 1434--1441, Buenos Aires, Argentina.
+
+\bibitem[Bordea et~al., 2015]{task17semeval2015}
+Bordea, G., Buitelaar, P., Faralli, S., and Navigli, R. (2015).
+\newblock Semeval-2015 task 17: Taxonomy extraction evaluation (texeval).
+\newblock In {\em Proceedings of the 9th International Workshop on Semantic
+  Evaluation (SemEval 2015)}, pages 902--910, Denver, CO, USA. Association for
+  Computational Linguistics.
+
+\bibitem[Bordea et~al., 2016]{bordea2016semeval}
+Bordea, G., Lefever, E., and Buitelaar, P. (2016).
+\newblock Semeval-2016 task 13: Taxonomy extraction evaluation (texeval-2).
+\newblock In {\em Proceedings of the 10th International Workshop on Semantic
+  Evaluation (SemEval-2016)}, pages 1081--1091, San Diego, CA, USA.
+
+\bibitem[Brachman, 1983]{DBLP:journals/computer/Brachman83}
+Brachman, R.~J. (1983).
+\newblock What {IS-A} is and isn't: An analysis of taxonomic links in
+  semanticnetworks.
+\newblock {\em {IEEE} Computer}, 16(10):30--36.
+
+\bibitem[Cleuziou and Moreno, 2016]{S16-1205}
+Cleuziou, G. and Moreno, J.~G. (2016).
+\newblock Qassit at semeval-2016 task 13: On the integration of semantic
+  vectors in pretopological spaces for lexical taxonomy acquisition.
+\newblock In {\em Proceedings of the 10th International Workshop on Semantic
+  Evaluation (SemEval-2016)}, pages 1315--1319, San Diego, CA, USA.
+
+\bibitem[Ferraresi et~al., 2008]{Ferraresi}
+Ferraresi, A., Zanchetta, E., Baroni, M., and Bernardini, S. (2008).
+\newblock Introducing and evaluating ukwac, a very large web-derived corpus of
+  english.
+\newblock In {\em Proceedings of the 4th Web as Corpus Workshop (WAC-4) Can we
+  beat Google}, pages 47--54, Marakech, Morocco.
+
+\bibitem[Fu et~al., 2014]{fu2014learning}
+Fu, R., Guo, J., Qin, B., Che, W., Wang, H., and Liu, T. (2014).
+\newblock Learning semantic hierarchies via word embeddings.
+\newblock In {\em Proceedings of the 52nd Annual Meeting of the Association for
+  Computational Linguistics}, volume~1, pages 1199--1209, Baltimore, MD, USA.
+
+\bibitem[Goldhahn et~al., 2012]{goldhahn}
+Goldhahn, D., Eckart, T., and Quasthoff, U. (2012).
+\newblock Building large monolingual dictionaries at the leipzig corpora
+  collection: From 100 to 200 languages.
+\newblock In {\em Proceedings of the Eight International Conference on Language
+  Resources and Evaluation (LREC’12)}, pages 759--765, Istanbul, Turkey.
+
+\bibitem[Grefenstette, 2015]{grefenstette2015inriasac}
+Grefenstette, G. (2015).
+\newblock Inriasac: Simple hypernym extraction methods.
+\newblock {\em arXiv preprint arXiv:1502.01271}.
+
+\bibitem[Hearst, 1992]{Hearst:1992:AAH:992133.992154}
+Hearst, M.~A. (1992).
+\newblock Automatic acquisition of hyponyms from large text corpora.
+\newblock In {\em Proceedings of the 14th Conference on Computational
+  Linguistics}, pages 539--545, Nantes, France.
+
+\bibitem[Kluegl et~al., 2016]{kluegl2016uima}
+Kluegl, P., Toepfer, M., Beck, P.-D., Fette, G., and Puppe, F. (2016).
+\newblock Uima ruta: Rapid development of rule-based information extraction
+  applications.
+\newblock {\em Natural Language Engineering}, 22(1):1--40.
+
+\bibitem[Levy et~al., 2015]{levy2015supervised}
+Levy, O., Remus, S., Biemann, C., and Dagan, I. (2015).
+\newblock Do supervised distributional methods really learn lexical inference
+  relations?
+\newblock In {\em Proceedings of the 2015 Conference of the North American
+  Chapter of the Association for Computational Linguistics: Human Language
+  Technologies}, pages 970--976, Denver, CO, USA.
+
+\bibitem[Li et~al., 2016]{Li2016JointEO}
+Li, Y., Zheng, R., Tian, T., Hu, Z., Iyer, R., and Sycara, K.~P. (2016).
+\newblock Joint embedding of hierarchical categories and entities for concept
+  categorization and dataless classification.
+\newblock In {\em the 26th International Conference on Computational
+  Linguistics}, Osaka, Japan.
+
+\bibitem[Mahdisoltani et~al., 2013]{mahdisoltani2013yago3}
+Mahdisoltani, F., Biega, J., and Suchanek, F.~M. (2013).
+\newblock Yago3: A knowledge base from multilingual wikipedias.
+\newblock In {\em Conference on Innovative Data Systems Research 2013},
+  Asilomar, CA, USA.
+
+\bibitem[Mikolov et~al., 2013]{mikolov2013distributed}
+Mikolov, T., Sutskever, I., Chen, K., Corrado, G.~S., and Dean, J. (2013).
+\newblock Distributed representations of words and phrases and their
+  compositionality.
+\newblock In {\em Advances in neural information processing systems}, pages
+  3111--3119, Stateline, NV, USA.
+
+\bibitem[Nickel and Kiela, 2017]{NIPS2017_7213}
+Nickel, M. and Kiela, D. (2017).
+\newblock Poincar\'{e} embeddings for learning hierarchical representations.
+\newblock In {\em Advances in Neural Information Processing Systems 30}, pages
+  6338--6347, Long Beach, CA, USA.
+
+\bibitem[Panchenko et~al., 2016]{panchenko2016taxi}
+Panchenko, A., Faralli, S., Ruppert, E., Remus, S., Naets, H., Fairon, C.,
+  Ponzetto, S.~P., and Biemann, C. (2016).
+\newblock Taxi at semeval-2016 task 13: a taxonomy induction method based on
+  lexico-syntactic patterns, substrings and focused crawling.
+\newblock In {\em Proceedings of the 10th International Workshop on Semantic
+  Evaluation (SemEval-2016)}, pages 1320--1327, San Diego, CA, USA.
+
+\bibitem[Panchenko et~al., 2012]{konvens:23_panchenko12p}
+Panchenko, A., Morozova, O., and Naets, H. (2012).
+\newblock A semantic similarity measure based on lexico-syntactic patterns.
+\newblock In {\em Proceedings of KONVENS 2012}, pages 174--178, Vienna,
+  Austria.
+
+\bibitem[Parker et~al., 2009]{parker}
+Parker, R., Graff, D., Kong, J., Chen, K., and Maeda, K. (2009).
+\newblock English gigaword forth edition.
+\newblock In {\em Linguistic Data Consortium}, Philadelphia, PA, USA.
+
+\bibitem[Pocostales, 2016]{pocostales2016nuig}
+Pocostales, J. (2016).
+\newblock Nuig-unlp at semeval-2016 task 13: A simple word embedding-based
+  approach for taxonomy extraction.
+\newblock In {\em Proceedings of the 10th International Workshop on Semantic
+  Evaluation (SemEval-2016)}, pages 1298--1302, San Diego, CA, USA.
+
+\bibitem[Remus and Biemann, 2016]{remus2016domain}
+Remus, S. and Biemann, C. (2016).
+\newblock Domain-specific corpus expansion with focused webcrawling.
+\newblock In {\em Proceedings of the 10th International Conference on Language
+  Resources and Evaluation (LREC)}, Portoro\v{z}, Slovenia.
+
+\bibitem[Seitner et~al., 2016]{Seitner2016ALD}
+Seitner, J., Bizer, C., Eckert, K., Faralli, S., und Heiko~Paulheim, R.~M., and
+  Ponzetto, S. (2016).
+\newblock A large database of hypernymy relations extracted from the web.
+\newblock In {\em Proceedings of the 10th edition of the Language Resources and
+  Evaluation Conference}, Portoro\v{z}, Slovenia.
+
+\bibitem[Shwartz et~al., 2016]{shwartz2016improving}
+Shwartz, V., Goldberg, Y., and Dagan, I. (2016).
+\newblock Improving hypernymy detection with an integrated path-based and
+  distributional method.
+\newblock In {\em Proceedings of the 54th Annual Meeting of the Association for
+  Computational Linguistics}, pages 2389--2398, Berlin, Germany.
+
+\bibitem[Suchanek et~al., 2007]{suchanek2007yago}
+Suchanek, F.~M., Kasneci, G., and Weikum, G. (2007).
+\newblock Yago: a core of semantic knowledge.
+\newblock In {\em Proceedings of the 16th international conference on World
+  Wide Web}, pages 697--706, Banff, Alberta, Canada.
+
+\bibitem[Tarjan, 1972]{tarjan1972depth}
+Tarjan, R. (1972).
+\newblock Depth-first search and linear graph algorithms.
+\newblock {\em SIAM journal on computing}, 1(2):146--160.
+
+\bibitem[Velardi et~al., 2013]{velardi2013ontolearn}
+Velardi, P., Faralli, S., and Navigli, R. (2013).
+\newblock Ontolearn reloaded: A graph-based algorithm for taxonomy induction.
+\newblock {\em Computational Linguistics}, 39(3):665--707.
+
+\bibitem[Wagner and Wagner, 2007]{f&m}
+Wagner, S. and Wagner, D. (2007).
+\newblock Comparing clusterings an overview.
+\newblock arXiv:1609.04747.
+
+\bibitem[Wang et~al., 2017]{wang2017short}
+Wang, C., He, X., and Zhou, A. (2017).
+\newblock A short survey on taxonomy learning from text corpora: Issues,
+  resources and recent advances.
+\newblock In {\em Proceedings of the 2017 Conference on Empirical Methods in
+  Natural Language Processing}, pages 1190--1203, Copenagen, Denmark.
+
+\bibitem[Yang et~al., 2017]{Yang2017technical}
+Yang, S., Zou, L., Wang, Z., Yan, J., and Wen, J.-R. (2017).
+\newblock Efficiently answering technical questions - a knowledge graph
+  approach.
+\newblock In {\em Proceedings of the Thirty-First AAAI Conference on Artificial
+  Intelligence}, pages 31111--3118, San Francisco, CA, USA.
+
+\bibitem[Zhang et~al., 2018]{Zhang:2018:TUT:3219819.3220064}
+Zhang, C., Tao, F., Chen, X., Shen, J., Jiang, M., Sadler, B., Vanni, M., and
+  Han, J. (2018).
+\newblock Taxogen: Unsupervised topic taxonomy construction by adaptive term
+  embedding and clustering.
+\newblock In {\em Proceedings of the 24th ACM SIGKDD International Conference
+  on Knowledge Discovery \&\#38; Data Mining}, pages 2701--2709, London, United
+  Kingdom.
+
+\bibitem[Zhang et~al., 2014]{zhang2014taxonomy}
+Zhang, Y., Ahmed, A., Josifovski, V., and Smola, A. (2014).
+\newblock Taxonomy discovery for personalized recommendation.
+\newblock In {\em Proceedings of the 7th ACM international conference on Web
+  search and data mining}, pages 243--252, New York City, NY, USA.
+
+\end{thebibliography}
